@@ -7,13 +7,14 @@
   "keywords": [
     "gatsby"
   ],
-  "config":{
+  "config": {
     "version": "v1"
   },
   "scripts": {
     "develop": "gatsby develop",
     "start": "gatsby develop",
-    "build": "gatsby build",
+    "build": "gatsby build && npm run ta_build",
+    "ta_build": "cd panel-de-js && npm run build && cp -R dist/* ../public/blog/tetrisattack/",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "deploy": "node bin/deploy.js"
@@ -21,6 +22,11 @@
   "dependencies": {
     "gatsby": "^3.11.1",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react-dom": "^17.0.1",
+    "react-helmet": "^6.1.0",
+    "react-script-tag": "^1.1.2"
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.8.0"
   }
 }

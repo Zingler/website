@@ -1,0 +1,4 @@
+[submodule "panel-de-js"]
+	path = panel-de-js
+	url = https://github.com/Zingler/panel-de-js
+	ignore = dirty
