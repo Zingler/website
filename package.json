@@ -1,18 +1,22 @@
 {
-  "name": "markzingler_gatbsy",
+  "name": "markzingler",
   "version": "1.0.0",
   "private": true,
-  "description": "markzingler_gatbsy",
+  "description": "markzingler",
   "author": "Mark Z",
   "keywords": [
     "gatsby"
   ],
+  "config":{
+    "version": "v1"
+  },
   "scripts": {
     "develop": "gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "deploy": "node bin/deploy.js"
   },
   "dependencies": {
     "gatsby": "^3.11.1",

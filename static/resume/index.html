@@ -1,0 +1,256 @@
+<html>
+<head>
+    <style>
+        :root {
+            --primary-color: #004488;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        div {
+            padding: 0 0 5px 5px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        .date-title span {
+            font-size: 20px;
+        }
+
+        .date-title .secondary {
+            color: gray;
+        }
+
+        .date-title {
+            position: relative;
+        }
+
+        .date-title .date {
+            position: absolute;
+            right: 0px;
+        }
+
+        .resume {
+            padding: 0px;
+            width: 8.5in;
+            height: 11in;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ul {
+            margin-top: 0px;
+            padding-inline-start: 30px;
+            list-style: none;
+        }
+
+        ul:not(.no-decorate) li::before {
+            content: "\25AA";
+            color: var(--primary-color);
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        #content-columns {
+            display: flex;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        #content-columns>div {
+            padding-right: 20px;
+        }
+
+        .column-left {
+            box-shadow: 5px 0 5px -5px #888;
+            z-index: 10;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px;
+        }
+
+        .column-right {
+            background-color: rgb(219, 219, 219);
+        }
+
+        my-section>.title {
+            color: var(--primary-color);
+        }
+
+        my-section[title="Experience"] dated-section>* {
+            border-left: 2px var(--primary-color) solid;
+            padding-left: 10px;
+        }
+
+        my-section[title="Experience"] dated-section h2:before {
+            content: "\2666";
+            color: var(--primary-color);
+            position: absolute;
+            left: -7px;
+            top: 1px;
+        }
+
+        my-section[title="Experience"] dated-section h2 {
+            position: relative;
+        }
+
+        .no-decorate li {
+            list-style-type: none;
+            margin-bottom: 5px;
+        }
+
+        .no-decorate {
+            padding-inline-start: 10px;
+        }
+
+        html * {
+            font-family: Calibri !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="resume">
+        <div class="header">
+            <h1>Mark Zingler</h1>
+            <i>Software Developer</i>
+        </div>
+        <div id="content-columns">
+            <div class="column-left">
+                <p>I strive to produce reliable, maintainable and extendable solutions to your engineering problems.
+                   I'm energized by difficult technical challenges and unique problem domains.
+                </p>
+                <my-section title="Experience">
+                    <dated-section primary="Amazon" secondary="Software Development Engineer" date="2013 - 2020">
+                        Experience in three different organizations building new services, improving existing ones,
+                        contributing to shared libraries and mentoring new hires/interns.
+                        <hr>
+
+                        <h4>Robomaker</h4>
+                        <ul>
+                            <li>Designed and implemented public APIs for AWS Robomaker</li>
+                            <li>Built floorplan generation algorithms for AWS WorldForge</li>
+                            <li>Built EC2 instance fleet management for on demand compute resources for customers</li>
+                            <li>Created deployment automation for 10+ services deploying to 8 regions (Deployment, monitoring, dashboards)</li>
+                        </ul>
+
+                        <h4>Fulfillment Technologies</h4>
+                        <ul>
+                            <li>Improved and added features to optimization models for warehouse operations to minimize late shipments.</li>
+                            <li>Built staffing service that assigns people to individual stations to maximize throughput.
+                                Used in 8+ of our largest fulfillment centers.</li>
+                            <li>Created visualizations of inputs and outputs to our optimization models</li>
+                        </ul>
+
+                        <h4>Seller Central</h4>
+                        <ul>
+                            <li>Maintained core services and integration layers of seller central website used by 30+ application teams.</li>
+                            <li>Built authentication system to allow third party support associates access limited and auditable access to customer accounts.</li>
+                        </ul>
+                    </dated-section>
+
+                    <dated-section primary="University of Minnesota" secondary="TA" date="2011 - 2013">
+                        Created lab exercises and homework, led lab sections, tutored students and graded assignments and tests.
+                        Created game engine and AI benchmark players for the students' final projects.
+                    </dated-section>
+
+                    <dated-section primary="University of Minnesota" secondary="Research Assistant" date="2011">
+                        Distributed and cloud computing in mobile for Android devices. Built android applications that outsourced
+                        processing tasks to our cloud architecture.
+                    </dated-section>
+                </my-section>
+
+                <my-section title='Education'>
+                    <dated-section primary="Bachelor's Degree in Computer Science" date="2009 - 2013">
+                        University of Minnesota - Twin Cities GPA <b>3.93</b>
+                        <p>
+                            Relevant Coursework: Artificial Intelligence, Advanced Algorithms and Data
+                            Structures, Computer Security, Computer Graphics, User Interface Design, Compilers, Parallel
+                            Computing, Minor in Mathematics
+                        </p>
+                    </dated-section>
+                </my-section>
+            </div>
+
+            <div class="column-right">
+                <my-section title="Contact">
+                    <ul class="no-decorate">
+                        <li><a href="mailto:mark.zingler@gmail.com">mark.zingler@gmail.com</a></li>
+                        <li>952-693-5317</li>
+                        <li>Woodbury, MN</li>
+                        <li><a href="https://github.com/Zingler">https://github.com/Zingler</a></li>
+                    </ul>
+                </my-section>
+
+                <my-section title="Skills">
+                    <ul class="no-decorate">
+                        <li>Java</li>
+                        <li>Python</li>
+                        <li>HTML CSS JavaScript</li>
+                        <li>Linear programming</li>
+                        <li>Optimization models</li>
+                        <li>AWS</li>
+                    </ul>
+                </my-section>
+            </div>
+        </div>
+
+    </div>
+
+    <template id="my-section-template">
+        <h1 class="title"></h1>
+        <div class="content"></div>
+    </template>
+
+    <template id="dated-section-template">
+        <h2 class="date-title">
+            <span class="primary"></span>&nbsp;
+            <span class="secondary"></span>
+            <span class="date"></span>
+        </h2>
+        <div id="content"></div>
+    </template>
+
+    <script>
+        customElements.define('my-section',
+            class extends HTMLElement {
+                connectedCallback() {
+                    let node = document.getElementById('my-section-template').content.cloneNode(true);
+
+                    const title = this.getAttribute('title');
+                    node.querySelector('.title').innerHTML = title;
+                    node.querySelector('.content').replaceChildren(...this.childNodes)
+                    this.replaceChildren(node);
+                }
+            }
+        );
+        customElements.define('dated-section',
+            class extends HTMLElement {
+                connectedCallback() {
+                    let node = document.getElementById('dated-section-template').content.cloneNode(true);
+
+                    node.querySelector('.primary').innerText = this.getAttribute('primary');
+                    node.querySelector('.secondary').innerText = this.getAttribute('secondary');
+                    node.querySelector('.date').innerText = this.getAttribute('date');
+                    node.querySelector('#content').replaceChildren(...this.childNodes);
+                    this.replaceChildren(node)
+                }
+            }
+        );
+
+    </script>
+</body>
+
+</html>
