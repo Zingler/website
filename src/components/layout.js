@@ -8,22 +8,29 @@ export default class Layout extends React.Component {
     }
     render() {
         return (
-            <div style={{ maxWidth: 800, padding: `0 1rem` }}>
+            <div class="content" style={{ maxWidth: 960, margin: "auto" }}>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></link>
 
-                <div className="navbar">
-                    <a href="/">Home</a>
-                    <div className="dropdown">
-                        <button className="dropbtn">Blog <i className="fa fa-caret-down"></i>
-                        </button>
-                        <div className="dropdown-content">
-                            <a href="/blog/tetrisattack">Tetris Attack</a>
-                            <a href="/blog/wave">Wave Equation</a>
+                <nav className="navbar">
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><div className="dropdown">
+                            <button className="dropbtn">Blog <i className="fa fa-caret-down"></i>
+                            </button>
+                            <ul className="dropdown-content">
+                                <li>
+                                    <a href="/blog/tetrisattack">Tetris Attack</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/wave">Wave Equation</a>
+                                </li>
+                            </ul>
                         </div>
-                    </div>
-                    <a href="/resume">About Me</a>
-                </div>
-                <div>
+                        </li>
+                        <li><a href="/resume">About Me</a></li>
+                    </ul>
+                </nav>
+                <div class="main-content">
                     {this.props.children}
                 </div>
             </div>
