@@ -11,13 +11,65 @@
             ctl2 = parseToRGB(document.getElementById("three").value)
             end = parseToRGB(document.getElementById("four").value)
 
-            mixer = bezier([start, ctl1, ctl2, end].map((x) => rgbToHsv(...x)))
-            mixer2 = (t) => hsvToRgb(...mixer(t)) 
+            mixer = bezier([start, ctl1, ctl2, end])
 
             for (let i = 0; i < 1000; i++) {
                 t = i / 1000
-                ctx.fillStyle = rgbToString(mixer2(t))
+                ctx.fillStyle = rgbToString(mixer(t))
                 ctx.fillRect(i, 0, i + 1, 100)
+            }
+
+            distanceMixer = distanceCorrection(mixer, 1000)
+
+            cd = document.getElementById("distance")
+            dctx = cd.getContext("2d");
+
+            for (let i = 0; i < 1000; i++) {
+                t = i / 1000
+                dctx.fillStyle = rgbToString(distanceMixer(t))
+                dctx.fillRect(i, 0, i + 1, 100)
+            }
+
+            hsvmixer = bezier([start, ctl1, ctl2, end].map((c)=>rgbToHsv(...c)))
+            hd = document.getElementById("hsv")
+            hctx = hd.getContext("2d");
+
+            for (let i = 0; i < 1000; i++) {
+                t = i / 1000
+                hctx.fillStyle = rgbToString(hsvToRgb(...hsvmixer(t)))
+                hctx.fillRect(i, 0, i + 1, 100)
+            }
+
+            hdd = document.getElementById("hsvdistance")
+            hdctx = hdd.getContext("2d");
+            hsvdistancemixer = distanceCorrection(hsvmixer, 1000)
+
+            for (let i = 0; i < 1000; i++) {
+                t = i / 1000
+                hdctx.fillStyle = rgbToString(hsvToRgb(...hsvdistancemixer(t)))
+                hdctx.fillRect(i, 0, i + 1, 100)
+            }
+        }
+
+        function distanceCorrection(f, steps) {
+            let sum = 0
+            let cum_distance = [0]
+            for(let i=1; i<steps; i++) {
+                let old = f((i-1)/steps)
+                let current = f((i)/steps)
+                let dist = Math.sqrt(old.map((x,i) => Math.pow(x-current[i], 2)).reduce((x,y)=>x+y, 0))
+                sum += dist
+                cum_distance.push(sum)
+            }
+
+            return (t) => {
+                let d = t*sum;
+                for(let i=0; i<steps; i++) {
+                    if (cum_distance[i] > d) {
+                        return f(i/steps)
+                    }
+                }
+                return f(1)
             }
         }
 
@@ -126,7 +178,8 @@
 </head>
 
 <body>
-
+    Bezier curve through color spaces
+    <br>
     <input id="one" type="color">
     <input id="two" type="color">
     <input id="three" type="color">
@@ -134,7 +187,21 @@
     <button onclick="draw()">Draw</button>
     <br>
     <br>
+    Equal Time
+    <br>
     <canvas id="canvas" width="1000" height="100"></canvas>
+    <br>
+    Equal Distance
+    <br>
+    <canvas id="distance" width="1000" height="100"></canvas>
+    <br>
+    Through hsv
+    <br>
+    <canvas id="hsv" width="1000" height="100"></canvas>
+    <br>
+    Through hsv - Equal Distance
+    <br>
+    <canvas id="hsvdistance" width="1000" height="100"></canvas>
 </body>
 
 </html>
