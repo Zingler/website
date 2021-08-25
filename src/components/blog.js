@@ -9,6 +9,8 @@ export default function Blog(props) {
             <div>
                 {props.children}
             </div>
+            <br></br>
+            <br></br>
         </div>
     )
 }

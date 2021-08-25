@@ -157,11 +157,13 @@ const WavePage = () => {
 
     return result
 }`} </pre>
-        There's more boundary conditions here since the whole outside edge of this x-y rectangle needs to be concidered, but the core of the idea is simple.
+          There's more boundary conditions here since the whole outside edge of this x-y rectangle needs to be concidered, but the core of the idea is simple.
         </p>
 
-        <Wave2D/>
-        Here we choose to render the displacement of the wave as a color rather than requiring a 3d rendered view.
+        <Wave2D />
+        <p>
+          Here we choose to render the displacement of the wave as a color rather than requiring a 3d rendered view.
+        </p>
       </Blog>
     </Layout>
   )

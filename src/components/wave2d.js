@@ -1,10 +1,11 @@
 import React from "react"
+import * as color from "./colors"
 
 export default class Wave2D extends React.Component {
     componentDidMount() {
-        let pointsx = 800
+        let pointsx = 400
         let pointsy = 300
-        let v = 1
+        let v = .5
 
         let u = []
         for (let x = 0; x < pointsx; x++) {
@@ -12,7 +13,7 @@ export default class Wave2D extends React.Component {
             for (let y = 0; y < pointsy; y++) {
                 const dx = Math.abs(x - pointsx / 2);
                 const dy = Math.abs(y - pointsy / 2);
-                u[x][y] = (dx * dx + dy * dy < 60 * 60) ? 1 : -0.5;
+                u[x][y] = (dx * dx + dy * dy < 60 * 60) ? 1 : 0;
             }
         }
 
@@ -32,6 +33,12 @@ export default class Wave2D extends React.Component {
             }
         }
 
+        let p = color.parseToRGB
+        let rh = color.rgbToHsv
+        let bez = color.bezier(["#FF0000","#FF0000","#FF00FF","#FF00FF"].map(p).map((a) => rh(...a)))
+        let rgb = (t) => color.hsvToRgb(...bez(t))
+        let mixer = color.precompute(rgb, 100)
+
         function render(u) {
             var c = document.getElementById("wave2d_canvas");
             var context = c.getContext("2d");
@@ -41,16 +48,19 @@ export default class Wave2D extends React.Component {
 
             for (let x = 0; x < u.length; x += 1) {
                 for (let y = 0; y < u[x].length; y += 1) {
-                    var color = (u[x][y] + 1) / 2 * 255
-                    if (color < 0) {
-                        color = 0
-                    } else if (color > 255) {
-                        color = 255
+                    var zeroToOne = (u[x][y] + 1) / 2 
+                    if (!zeroToOne) {
+                        return
                     }
-
+                    zeroToOne = Math.max(0,Math.min(1, zeroToOne))
                     let index = (y * u.length + x) * 4
-                    myImageData.data[index + 2] = color
-                    myImageData.data[index + 3] = 255
+
+                    let [r,g,b] = mixer(zeroToOne)
+
+                    myImageData.data[index + 0] = r
+                    myImageData.data[index + 1] = g
+                    myImageData.data[index + 2] = b
+                    myImageData.data[index + 3] = 0 + (255) * Math.abs(.5-zeroToOne)*2
                 }
             }
             context.putImageData(myImageData, 0, 0);
@@ -82,7 +92,7 @@ export default class Wave2D extends React.Component {
             for (let x = 0; x < pointsx; x++) {
                 dt2[x] = []
                 for (let y = 0; y < pointsy; y++) {
-                    dt2[x][y] = (du2x[x][y] + du2y[x][y]) * v * v
+                    dt2[x][y] = (du2x[x][y] + du2y[x][y]) * v * v - dt[x][y] * 0.000002
                 }
             }
             let new_t = []
@@ -119,7 +129,7 @@ export default class Wave2D extends React.Component {
         }
 
         function run() {
-            setInterval(advance, 10)
+            setInterval(advance, 20)
         }
 
         function diffx(u) {
@@ -162,7 +172,7 @@ export default class Wave2D extends React.Component {
     }
     render() {
         return (
-            <canvas id="wave2d_canvas" width="800" height="200"></canvas>
+            <canvas id="wave2d_canvas" width="400" height="300"></canvas>
         )
     }
 }
