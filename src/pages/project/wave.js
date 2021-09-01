@@ -2,7 +2,7 @@ import * as React from "react"
 import Layout from "../../components/layout"
 import Wave from "../../components/wave"
 import Wave2D from "../../components/wave2d"
-import Blog from "../../components/blog"
+import Project from "../../components/project"
 import "../../styles/code.css"
 
 // markup
@@ -10,7 +10,7 @@ const WavePage = () => {
   return (
     <Layout>
 
-      <Blog title="The Wave Equation">
+      <Project title="The Wave Equation">
         <p>
           Waves, such as light waves or sound waves, can be described by the following equation in the one dimensional case.
         </p>
@@ -164,7 +164,7 @@ const WavePage = () => {
         <p>
           Here we choose to render the displacement of the wave as a color rather than requiring a 3d rendered view.
         </p>
-      </Blog>
+      </Project>
     </Layout>
   )
 }

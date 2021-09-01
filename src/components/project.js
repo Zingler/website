@@ -1,7 +1,7 @@
 import React from "react"
 import "../styles/layout.css"
 
-export default function Blog(props) {
+export default function Project(props) {
     return (
         <div>
             <h1>{props.title}</h1>

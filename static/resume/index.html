@@ -151,6 +151,8 @@
                     I'm energized by difficult technical challenges and unique problem domains.
                 </p>
                 <my-section title="Experience">
+                    <dated-section primary="" secondary="Contract Software Developer" date="2021">
+                    </dated-section>
                     <dated-section primary="Amazon" secondary="Software Development Engineer" date="2013 - 2020">
                         Experience in three different organizations building new services, improving existing ones,
                         contributing to shared libraries and mentoring new hires/interns.
@@ -221,6 +223,15 @@
                         <li>Linear programming</li>
                         <li>Optimization models</li>
                         <li>AWS</li>
+                        <ul class="no-decorate">
+                            <li>API Gateway</li>
+                            <li>Cloudformation</li>
+                            <li>Code Deploy/Pipelines</li>
+                            <li>DynamoDB</li>
+                            <li>Lambda</li>
+                            <li>VPC and load balancers</li>
+                            <li>S3</li>
+                        </ul>
                     </ul>
                 </my-section>
             </div>
@@ -235,7 +246,7 @@
 
     <template id="dated-section-template">
         <h2 class="date-title">
-            <span class="primary"></span>&nbsp;
+            <span class="primary"></span>
             <span class="secondary"></span>
             <span class="date"></span>
         </h2>
@@ -260,7 +271,11 @@
                 connectedCallback() {
                     let node = document.getElementById('dated-section-template').content.cloneNode(true);
 
-                    node.querySelector('.primary').innerText = this.getAttribute('primary');
+                    let primary = this.getAttribute('primary');
+                    if (primary != "") {
+                        primary += " "
+                    }
+                    node.querySelector('.primary').innerText = primary;
                     node.querySelector('.secondary').innerText = this.getAttribute('secondary');
                     node.querySelector('.date').innerText = this.getAttribute('date');
                     node.querySelector('#content').replaceChildren(...this.childNodes);

@@ -14,7 +14,7 @@
     "develop": "gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build && npm run ta_build",
-    "ta_build": "cd panel-de-js && npm run build && cp -R dist/* ../public/blog/tetrisattack/",
+    "ta_build": "cd panel-de-js && npm run build && cp -R dist/* ../public/project/tetrisattack/",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "deploy": "node bin/deploy.js"

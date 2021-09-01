@@ -15,19 +15,19 @@ export default class Layout extends React.Component {
                     <ul>
                         <li><a href="/">Home</a></li>
                         <li><div className="dropdown">
-                            <button className="dropbtn">Blog <i className="fa fa-caret-down"></i>
+                            <button className="dropbtn">Projects <i className="fa fa-caret-down"></i>
                             </button>
                             <ul className="dropdown-content">
                                 <li>
-                                    <a href="/blog/tetrisattack">Tetris Attack</a>
+                                    <a href="/project/tetrisattack">Tetris Attack</a>
                                 </li>
                                 <li>
-                                    <a href="/blog/wave">Wave Equation</a>
+                                    <a href="/project/wave">Wave Equation</a>
                                 </li>
                             </ul>
                         </div>
                         </li>
-                        <li><a href="/resume">About Me</a></li>
+                        <li><a href="/resume">Resumé</a></li>
                     </ul>
                 </nav>
                 <div class="main-content">
