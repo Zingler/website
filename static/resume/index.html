@@ -9,6 +9,7 @@
         body {
             background-color: grey;
             margin: 0px;
+            font-size: 100%;
         }
 
         div {
@@ -24,7 +25,7 @@
         }
 
         .date-title span {
-            font-size: 20px;
+            font-size: 1.2rem;
         }
 
         .date-title .secondary {
@@ -33,12 +34,6 @@
 
         .date-title {
             position: relative;
-        }
-
-        .date-title .date {
-            position: absolute;
-            right: 0px;
-            bottom: 0px;
         }
 
         .resume {
@@ -72,7 +67,8 @@
             margin-left: -1em;
         }
 
-        @media print, screen and (min-width: 1000px) {
+        @media print,
+        screen and (min-width: 1000px) {
             #content-columns {
                 display: flex;
                 overflow: hidden;
@@ -81,6 +77,12 @@
 
             .column-right {
                 background-color: rgb(219, 219, 219);
+            }
+
+            .date-title .date {
+                position: absolute;
+                right: 0px;
+                bottom: 0px;
             }
         }
 

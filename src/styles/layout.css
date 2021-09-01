@@ -6,10 +6,12 @@
 body {
   background-color: #ddd;
   margin-top: 0px;
+  font-size: 100%;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-body, button {
-  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+button {
+  font-family: inherit;
 }
 
 .content {
@@ -27,7 +29,7 @@ nav {
 }
 
 nav, nav button {
-  font-size: 18px;
+  font-size: 1.2rem;
   font-weight: 500;
 }
 
