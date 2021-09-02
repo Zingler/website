@@ -1,0 +1,46 @@
+.cell {
+  width: 70px;
+  height: 70px;
+  border: 1px solid grey;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  user-select: none;
+}
+
+.cell .value {
+  text-align: center;
+}
+
+.cell.right-border {
+  border-right: 3px solid black
+}
+
+.cell.bottom-border {
+  border-bottom: 3px solid black
+}
+
+.invalid {
+  background-color: red !important;
+}
+
+.value {
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.solver {
+  color: blue;
+}
+
+.selected {
+  background-color: lightblue;
+}
+
+.candidates {
+  font-size: .8em;
+}
+
+.row {
+  display: flex;
+}
