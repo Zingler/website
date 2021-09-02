@@ -15,7 +15,7 @@ class Board {
         }
     }
 
-    reset(){
+    reset() {
         for (let r = 0; r < this.grid.length; r++) {
             for (let c = 0; c < this.grid[r].length; c++) {
                 this.grid[r][c].resetCandidates();
@@ -23,33 +23,41 @@ class Board {
         }
     }
 
-    asString() {
-        let result = ""
-        for (let r = 0; r < this.grid.length; r++) {
-            for (let c = 0; c < this.grid[r].length; c++) {
-                result += this.grid[r][c].asString()
-
-                if (c == 2 || c == 5) {
-                    result += "|"
-                }
-            }
-            result += "\n"
-            if (r == 2 || r == 5) {
-                result += "-".repeat(9 + 2) + "\n"
+    * elements() {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                yield [this.grid[r][c], r, c]
             }
         }
-        return result;
+    }
+
+    cellsAtOffsets(origin, offsets) {
+        let r = origin[0]
+        let c = origin[1]
+        let result = []
+        for (let o of offsets) {
+            let one = r + o[0]
+            let two = c + o[1]
+            if (one >= 0 && one < 9 && two >= 0 && two < 9) {
+                result.push(this.grid[one][two])
+            }
+        }
+        return result
     }
 }
 
 class Rule {
     constructor() {
     }
+
+    run(board) {
+    }
 }
 
 class AggregateRule extends Rule {
-    constructor() {
+    constructor(rules) {
         super()
+        this.rules = rules
     }
 
     valid(board) {
@@ -161,36 +169,35 @@ class AllUniqueRule extends Rule {
 
 class RowUniqueRule extends AggregateRule {
     constructor() {
-        super()
-        this.rules = []
+        let rules = []
         for (let r = 0; r < 9; r++) {
             let indexes = []
             for (let c = 0; c < 9; c++) {
                 indexes.push([r, c])
             }
-            this.rules.push(new AllUniqueRule(indexes))
+            rules.push(new AllUniqueRule(indexes))
         }
+        super(rules)
     }
 }
 
 class ColUniqueRule extends AggregateRule {
     constructor() {
-        super()
-        this.rules = []
+        let rules = []
         for (let c = 0; c < 9; c++) {
             let indexes = []
             for (let r = 0; r < 9; r++) {
                 indexes.push([r, c])
             }
-            this.rules.push(new AllUniqueRule(indexes))
+            rules.push(new AllUniqueRule(indexes))
         }
+        super(rules)
     }
 }
 
 class BoxUniqueRule extends AggregateRule {
     constructor() {
-        super()
-        this.rules = []
+        let rules = []
         for (let br = 0; br < 3; br++) {
             for (let bc = 0; bc < 3; bc++) {
                 let indexes = []
@@ -199,16 +206,111 @@ class BoxUniqueRule extends AggregateRule {
                         indexes.push([r, c])
                     }
                 }
-                this.rules.push(new AllUniqueRule(indexes))
+                rules.push(new AllUniqueRule(indexes))
             }
         }
+        super(rules)
+    }
+}
+
+class NonDuplicatesAtOffsets extends Rule {
+    constructor(offsets) {
+        super()
+        this.offsets = offsets;
+    }
+
+    valid(board) {
+        for (let [cell, r, c] of board.elements()) {
+            if (cell.value) {
+                for (let adj of board.cellsAtOffsets([r, c], this.offsets)) {
+                    if (cell.value === adj.value) {
+                        return [false, [r, c]]
+                    }
+                }
+            }
+        }
+        return [true, undefined]
+    }
+
+    run(board) {
+        var changed = false;
+        for (let [cell, r, c] of board.elements()) {
+            if (cell.value) {
+                for (let adj of board.cellsAtOffsets([r, c], this.offsets)) {
+                    if (!adj.value) {
+                        changed |= adj.remove(cell.value)
+                        changed |= adj.remove(cell.value)
+                    }
+                }
+            }
+        }
+        return changed
+    }
+}
+
+class KnightRule extends NonDuplicatesAtOffsets {
+    constructor() {
+        let offsets = []
+        for (let l of [-1, 1]) {
+            for (let b of [-2, 2]) {
+                offsets.push([l, b])
+                offsets.push([b, l])
+            }
+        }
+        super(offsets)
+    }
+}
+
+class KingRule extends NonDuplicatesAtOffsets {
+    constructor() {
+        let offsets = []
+        for (let r of [-1, 0, 1]) {
+            for (let c of [-1, 0, 1]) {
+                if (r * c !== 0) {
+                    offsets.push([r, c])
+                }
+            }
+        }
+        super(offsets)
+    }
+}
+
+class NonConsecutiveRule extends Rule {
+    static adjOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+
+    valid(board) {
+        for (let [cell, r, c] of board.elements()) {
+            if (cell.value) {
+                for (let adj of board.cellsAtOffsets([r, c], NonConsecutiveRule.adjOffsets)) {
+                    if (Math.abs(cell.value - adj.value) === 1) {
+                        return [false, [r, c]]
+                    }
+                }
+            }
+        }
+        return [true, undefined]
+    }
+
+    run(board) {
+        var changed = false;
+        for (let [cell, r, c] of board.elements()) {
+            if (cell.value) {
+                for (let adj of board.cellsAtOffsets([r, c], NonConsecutiveRule.adjOffsets)) {
+                    if (!adj.value) {
+                        changed |= adj.remove(cell.value + 1)
+                        changed |= adj.remove(cell.value - 1)
+                    }
+                }
+            }
+        }
+        return changed
     }
 }
 
 class SudokuRule extends AggregateRule {
     constructor() {
-        super()
-        this.rules = [new BoxUniqueRule(), new RowUniqueRule, new ColUniqueRule()]
+        let rules = [new BoxUniqueRule(), new RowUniqueRule, new ColUniqueRule()]
+        super(rules)
     }
 }
 
@@ -256,7 +358,12 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
-        this.rule = new SudokuRule()
+        this.rule = new AggregateRule(
+            [new SudokuRule(),
+            new NonConsecutiveRule(),
+            new KingRule(),
+            new KnightRule()
+            ])
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
         this.handleKeyPress = this.handleKeyPress.bind(this)
@@ -276,7 +383,7 @@ export default class SudokuBoard extends React.Component {
 
         if (e.key > '0' && e.key <= '9') {
             let value = parseInt(e.key, 10)
-            if(this.board.grid[r][c].value) {
+            if (this.board.grid[r][c].value) {
                 this.board.reset()
             }
             this.board.grid[r][c].value = value
@@ -303,6 +410,10 @@ export default class SudokuBoard extends React.Component {
     render() {
         let [valid, bad_index] = this.rule.valid(this.board)
         let rows = []
+        if(this.state.selection) {
+            let selectedCell = this.board.grid[this.state.selection[0]][this.state.selection[1]]
+            var highlightCandidate = selectedCell.value
+        }
         for (let r = 0; r < this.board.grid.length; r++) {
             let cells = []
             for (let c = 0; c < this.board.grid[r].length; c++) {
@@ -328,25 +439,33 @@ export default class SudokuBoard extends React.Component {
                 if (c == 2 || c == 5) {
                     props['class'] += " right-border"
                 }
-                if(bad_index && bad_index[0] == r && bad_index[1] == c) {
+                if (bad_index && bad_index[0] == r && bad_index[1] == c) {
                     props['class'] += " invalid"
+                }
+                if (!cell.value && cell.candidates.has(highlightCandidate)) {
+                    props['class'] += " candidate-highlight"
                 }
 
                 if (cell.value) {
                     celldiv = <div {...props} onClick={this.handleClick}><span class="value">{this.board.grid[r][c].value}</span></div>
                 } else {
-                    let string = ""
-                    for (let can of cell.candidates) {
-                        string += can
+                    var v = 1
+                    let candidates = []
+                    for (let v = 1; v <= 9; v++) {
+                        var text = " "
+                        if (cell.candidates.has(v)) {
+                            text = v
+                        }
+                        candidates.push(<div>{text}</div>)
                     }
-                    celldiv = <div {...props} onClick={this.handleClick}><span class="candidates">{string}</span></div>
+                    celldiv = <div {...props} onClick={this.handleClick}><div class="candidates">{candidates}</div></div>
                 }
                 cells.push(celldiv)
             }
             rows.push(<div class="row">{cells}</div>)
         }
         return (
-            <div class="board" onKeyDown={this.handleKeyPress} tabindex="0">
+            <div class="board" onKeyDown={this.handleKeyPress} tabIndex="0">
                 {rows}
             </div>
         );

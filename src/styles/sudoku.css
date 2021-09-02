@@ -24,6 +24,23 @@
   background-color: red !important;
 }
 
+.candidates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  height: 80%;
+}
+
+.candidates div {
+  min-width: 33%;
+  text-align: center;
+  height: 33%;
+}
+
+.candidate-highlight {
+  background-color: rgb(205, 243, 255);
+}
+
 .value {
   font-size: 2em;
   font-weight: bold;
