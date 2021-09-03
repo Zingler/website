@@ -54,6 +54,7 @@ class Board {
 
     runOnePlyAnalysis(rule) {
         let currentValueCount = this.cellsWithValue()
+        let mvp = [-1, -1, -1, -1]
         for (let [cell, r, c] of this.elements()) {
             cell.clearAnalysis()
             if (!cell.value) {
@@ -69,8 +70,14 @@ class Board {
                     if (newCount > currentValueCount + 1) {
                         cell.addAddDigitOnePlyAnalysis(can)
                     }
+                    if(newCount > mvp[0] && good) {
+                        mvp = [newCount, r, c, can]
+                    }
                 }
             }
+        }
+        if(mvp[0] > 0) {
+            this.grid[mvp[1]][mvp[2]].mvp = mvp[3]
         }
     }
 
@@ -568,6 +575,7 @@ class Cell {
     clearAnalysis() {
         this.failedAnalysis = new Set()
         this.addDigitAnalysis = new Set()
+        delete this.mvp
     }
 
     get value() {
@@ -757,6 +765,9 @@ export default class SudokuBoard extends React.Component {
                         let candidateProps = {}
                         if (cell.addDigitAnalysis.has(v)) {
                             candidateProps["class"] = "add-digit-analysis"
+                        }
+                        if (cell.mvp && cell.mvp == v) {
+                            candidateProps["class"] = "mvp"
                         }
                         if (cell.failedAnalysis.has(v)) {
                             candidateProps["class"] = "failed-analysis"

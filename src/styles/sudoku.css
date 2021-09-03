@@ -74,6 +74,12 @@
   font-weight: bold;
 }
 
+.candidates .mvp {
+  color: black;
+  background-color: gold;
+  font-weight: bold;
+}
+
 .invalid .failed-analysis {
   color: white;
 }
