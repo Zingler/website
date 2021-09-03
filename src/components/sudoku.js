@@ -9,7 +9,7 @@ class Board {
         for (let i = 0; i < 9; i++) {
             let row = []
             for (let j = 0; j < 9; j++) {
-                row.push(new Cell(i,j))
+                row.push(new Cell(i, j))
             }
             this.grid.push(row)
         }
@@ -69,7 +69,7 @@ class Rule {
 }
 
 class AggregateRule extends Rule {
-    constructor(rules, inferences=[]) {
+    constructor(rules, inferences = []) {
         super()
         this.rules = rules
         this.inferences = inferences
@@ -101,6 +101,7 @@ class AllUniqueRule extends Rule {
     constructor(cell_indexes) {
         super()
         this.cell_indexes = cell_indexes
+        this.inferences = [new InsuffientCandidatesForUniqueGroup(cell_indexes)]
     }
 
     valid(board) {
@@ -114,6 +115,12 @@ class AllUniqueRule extends Rule {
                 return [false, index];
             }
             check_set.add(v)
+        }
+        for(let i of this.inferences) {
+            let [good, badIndex] = i.valid(board)
+            if (!good) {
+                return [false, badIndex]
+            }
         }
         return [true, undefined];
     }
@@ -344,7 +351,20 @@ class SudokuRule extends AggregateRule {
     }
 }
 
+class CellMustHaveNumberRule extends Rule {
+    valid(board) {
+        for (let [cell, r, c] of board.elements()) {
+            if (!cell.value && cell.candidates.size == 0) {
+                return [false, [r, c]]
+            }
+        }
+        return [true, undefined]
+    }
+}
+
 class Inference {
+    run(board) { }
+    valid(board) { }
 }
 
 class PointedPairInference extends Inference {
@@ -352,8 +372,8 @@ class PointedPairInference extends Inference {
         var changed = false
         for (let cells of board.blocks()) {
             let can_count = candidateCount(cells)
-            for(let index=1; index<=9; index++) {
-                if(can_count[index] <= 3 && can_count[index] > 0) {
+            for (let index = 1; index <= 9; index++) {
+                if (can_count[index] <= 3 && can_count[index] > 0) {
                     changed |= this.checkForPair(board, cells, index)
                 }
             }
@@ -365,30 +385,49 @@ class PointedPairInference extends Inference {
         var changed = false
         let rSet = new Set()
         let cSet = new Set()
-        for(let cell of cells) {
+        for (let cell of cells) {
             if (cell.candidates.has(candidate)) {
                 rSet.add(cell.row)
                 cSet.add(cell.col)
             }
         }
 
-        if(rSet.size == 1) {
+        if (rSet.size == 1) {
             let row = rSet.values().next().value
-            let colSet = new Set([0,1,2,3,4,5,6,7,8])
+            let colSet = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8])
             cells.forEach(c => colSet.delete(c.col))
-            for(let c of colSet) {
+            for (let c of colSet) {
                 changed |= board.grid[row][c].remove(candidate)
             }
         }
-        if(cSet.size == 1) {
+        if (cSet.size == 1) {
             let col = cSet.values().next().value
-            let rowSet = new Set([0,1,2,3,4,5,6,7,8])
+            let rowSet = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8])
             cells.forEach(c => rowSet.delete(c.row))
-            for(let r of rowSet) {
+            for (let r of rowSet) {
                 changed |= board.grid[r][col].remove(candidate)
             }
         }
         return changed
+    }
+}
+
+class InsuffientCandidatesForUniqueGroup extends Inference {
+    constructor(indexes) {
+        super()
+        this.indexes = indexes
+    }
+
+    valid(board) {
+        let cells = this.indexes.map(index => board.grid[index[0]][index[1]])
+        var openCells = cells.filter(c => !c.value)
+        let canCount = candidateCount(cells)
+        let uniqueCandidates = canCount.filter(count => count > 0).length
+        if(uniqueCandidates < openCells.length) {
+            let firstOpen = openCells[0]
+            return [false, [firstOpen.row, firstOpen.col]]
+        }
+        return [true, undefined]
     }
 }
 
@@ -438,7 +477,7 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
-        this.globalRules = [new SudokuRule()]
+        this.globalRules = [new CellMustHaveNumberRule(), new SudokuRule()]
         this.rule = new AggregateRule(this.globalRules)
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
