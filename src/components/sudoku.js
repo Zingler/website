@@ -9,7 +9,7 @@ class Board {
         for (let i = 0; i < 9; i++) {
             let row = []
             for (let j = 0; j < 9; j++) {
-                row.push(new Cell())
+                row.push(new Cell(i,j))
             }
             this.grid.push(row)
         }
@@ -27,6 +27,20 @@ class Board {
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 yield [this.grid[r][c], r, c]
+            }
+        }
+    }
+
+    * blocks() {
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                let cells = []
+                for (let i = r * 3; i < (r + 1) * 3; i++) {
+                    for (let j = c * 3; j < (c + 1) * 3; j++) {
+                        cells.push(this.grid[i][j])
+                    }
+                }
+                yield cells
             }
         }
     }
@@ -55,9 +69,10 @@ class Rule {
 }
 
 class AggregateRule extends Rule {
-    constructor(rules) {
+    constructor(rules, inferences=[]) {
         super()
         this.rules = rules
+        this.inferences = inferences
     }
 
     valid(board) {
@@ -74,6 +89,9 @@ class AggregateRule extends Rule {
         var changed = false
         for (let r of this.rules) {
             changed |= r.run(board)
+        }
+        for (let i of this.inferences) {
+            changed |= i.run(board)
         }
         return changed
     }
@@ -165,6 +183,18 @@ class AllUniqueRule extends Rule {
         changed |= this.loneSingle(board)
         return changed
     }
+}
+
+function candidateCount(cells) {
+    let candidate_count = Array(10).fill(0)
+    delete candidate_count[0]
+    for (let cell of cells) {
+        let cs = cell.candidates
+        for (let c of cs) {
+            candidate_count[c] += 1
+        }
+    }
+    return candidate_count
 }
 
 class RowUniqueRule extends AggregateRule {
@@ -310,13 +340,63 @@ class NonConsecutiveRule extends Rule {
 class SudokuRule extends AggregateRule {
     constructor() {
         let rules = [new BoxUniqueRule(), new RowUniqueRule, new ColUniqueRule()]
-        super(rules)
+        super(rules, [new PointedPairInference()])
+    }
+}
+
+class Inference {
+}
+
+class PointedPairInference extends Inference {
+    run(board) {
+        var changed = false
+        for (let cells of board.blocks()) {
+            let can_count = candidateCount(cells)
+            for(let index=1; index<=9; index++) {
+                if(can_count[index] <= 3 && can_count[index] > 0) {
+                    changed |= this.checkForPair(board, cells, index)
+                }
+            }
+        }
+        return changed
+    }
+
+    checkForPair(board, cells, candidate) {
+        var changed = false
+        let rSet = new Set()
+        let cSet = new Set()
+        for(let cell of cells) {
+            if (cell.candidates.has(candidate)) {
+                rSet.add(cell.row)
+                cSet.add(cell.col)
+            }
+        }
+
+        if(rSet.size == 1) {
+            let row = rSet.values().next().value
+            let colSet = new Set([0,1,2,3,4,5,6,7,8])
+            cells.forEach(c => colSet.delete(c.col))
+            for(let c of colSet) {
+                changed |= board.grid[row][c].remove(candidate)
+            }
+        }
+        if(cSet.size == 1) {
+            let col = cSet.values().next().value
+            let rowSet = new Set([0,1,2,3,4,5,6,7,8])
+            cells.forEach(c => rowSet.delete(c.row))
+            for(let r of rowSet) {
+                changed |= board.grid[r][col].remove(candidate)
+            }
+        }
+        return changed
     }
 }
 
 class Cell {
-    constructor() {
+    constructor(row, col) {
         this.clear()
+        this.row = row
+        this.col = col
     }
 
     remove(candidate) {
@@ -410,7 +490,7 @@ export default class SudokuBoard extends React.Component {
         let target = e.currentTarget
         let value = target.value
         let cls = eval(value)
-        if(target.checked) {
+        if (target.checked) {
             this.globalRules.push(new cls())
         } else {
             this.globalRules = this.globalRules.filter(r => !(r instanceof cls))
@@ -426,7 +506,7 @@ export default class SudokuBoard extends React.Component {
     render() {
         let [valid, bad_index] = this.rule.valid(this.board)
         let rows = []
-        if(this.state.selection) {
+        if (this.state.selection) {
             let selectedCell = this.board.grid[this.state.selection[0]][this.state.selection[1]]
             var highlightCandidate = selectedCell.value
         }
@@ -482,24 +562,24 @@ export default class SudokuBoard extends React.Component {
         }
         return (
             <div>
-            <div class="board" onKeyDown={this.handleKeyPress} tabIndex="0">
-                {rows}
-            </div>
-            <h2>Global Rules</h2>
-            <label>
-                <input type="checkbox" value="NonConsecutiveRule" onChange={this.handleGlobalRuleChange}/>
-                Non Consecutive Adjacent cells
-            </label>
-            <br/>
-            <label>
-                <input type="checkbox" value="KingRule" onChange={this.handleGlobalRuleChange}/>
-                King Move restriction
-            </label>
-            <br/>
-            <label>
-                <input type="checkbox" value="KnightRule" onChange={this.handleGlobalRuleChange}/>
-                Knight Move restriction
-            </label>
+                <div class="board" onKeyDown={this.handleKeyPress} tabIndex="0">
+                    {rows}
+                </div>
+                <h2>Global Rules</h2>
+                <label>
+                    <input type="checkbox" value="NonConsecutiveRule" onChange={this.handleGlobalRuleChange} />
+                    Non Consecutive Adjacent cells
+                </label>
+                <br />
+                <label>
+                    <input type="checkbox" value="KingRule" onChange={this.handleGlobalRuleChange} />
+                    King Move restriction
+                </label>
+                <br />
+                <label>
+                    <input type="checkbox" value="KnightRule" onChange={this.handleGlobalRuleChange} />
+                    Knight Move restriction
+                </label>
             </div>
         );
     }
