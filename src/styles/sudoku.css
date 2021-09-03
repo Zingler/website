@@ -16,6 +16,11 @@
   border-right: 3px solid black
 }
 
+.board {
+  float: left;
+  margin-right: 15px;
+}
+
 .cell.bottom-border {
   border-bottom: 3px solid black
 }

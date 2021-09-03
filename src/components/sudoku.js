@@ -358,23 +358,22 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
-        this.rule = new AggregateRule(
-            [new SudokuRule(),
-            new NonConsecutiveRule(),
-            new KingRule(),
-            new KnightRule()
-            ])
+        this.globalRules = [new SudokuRule()]
+        this.rule = new AggregateRule(this.globalRules)
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
         this.handleKeyPress = this.handleKeyPress.bind(this)
+        this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
 
         this.state = {
             selection: undefined,
-            board: this.board
+            board: this.board,
+            globalRules: []
         }
     }
 
     handleKeyPress(e) {
+        e.preventDefault()
         if (!this.state.selection) {
             return;
         }
@@ -404,6 +403,23 @@ export default class SudokuBoard extends React.Component {
         let col = parseInt(element.getAttribute('data-c'))
         this.setState(prev => ({
             selection: [row, col]
+        }))
+    }
+
+    handleGlobalRuleChange(e) {
+        let target = e.currentTarget
+        let value = target.value
+        let cls = eval(value)
+        if(target.checked) {
+            this.globalRules.push(new cls())
+        } else {
+            this.globalRules = this.globalRules.filter(r => !(r instanceof cls))
+        }
+        this.rule = new AggregateRule(this.globalRules)
+        this.board.reset()
+        while (this.rule.run(this.board)) { }
+        this.setState(prev => ({
+            board: this.board
         }))
     }
 
@@ -465,8 +481,25 @@ export default class SudokuBoard extends React.Component {
             rows.push(<div class="row">{cells}</div>)
         }
         return (
+            <div>
             <div class="board" onKeyDown={this.handleKeyPress} tabIndex="0">
                 {rows}
+            </div>
+            <h2>Global Rules</h2>
+            <label>
+                <input type="checkbox" value="NonConsecutiveRule" onChange={this.handleGlobalRuleChange}/>
+                Non Consecutive Adjacent cells
+            </label>
+            <br/>
+            <label>
+                <input type="checkbox" value="KingRule" onChange={this.handleGlobalRuleChange}/>
+                King Move restriction
+            </label>
+            <br/>
+            <label>
+                <input type="checkbox" value="KnightRule" onChange={this.handleGlobalRuleChange}/>
+                Knight Move restriction
+            </label>
             </div>
         );
     }
