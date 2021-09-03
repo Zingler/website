@@ -117,7 +117,7 @@ class AllUniqueRule extends Rule {
             }
             check_set.add(v)
         }
-        for(let i of this.inferences) {
+        for (let i of this.inferences) {
             let [good, badIndex, message] = i.valid(board)
             if (!good) {
                 return [false, badIndex, message]
@@ -213,7 +213,7 @@ class RowUniqueRule extends AggregateRule {
             for (let c = 0; c < 9; c++) {
                 indexes.push([r, c])
             }
-            rules.push(new AllUniqueRule(indexes, `Row ${r+1}`))
+            rules.push(new AllUniqueRule(indexes, `Row ${r + 1}`))
         }
         super(rules)
     }
@@ -227,7 +227,7 @@ class ColUniqueRule extends AggregateRule {
             for (let r = 0; r < 9; r++) {
                 indexes.push([r, c])
             }
-            rules.push(new AllUniqueRule(indexes, `Column ${c+1}`))
+            rules.push(new AllUniqueRule(indexes, `Column ${c + 1}`))
         }
         super(rules)
     }
@@ -244,7 +244,7 @@ class BoxUniqueRule extends AggregateRule {
                         indexes.push([r, c])
                     }
                 }
-                rules.push(new AllUniqueRule(indexes, `Box ${br*3+bc+1}`))
+                rules.push(new AllUniqueRule(indexes, `Box ${br * 3 + bc + 1}`))
             }
         }
         super(rules)
@@ -255,7 +255,7 @@ class NonDuplicatesAtOffsets extends Rule {
     constructor(offsets, moveType) {
         super()
         this.offsets = offsets;
-        this.move_type = moveType;
+        this.moveType = moveType;
     }
 
     valid(board) {
@@ -263,7 +263,7 @@ class NonDuplicatesAtOffsets extends Rule {
             if (cell.value) {
                 for (let adj of board.cellsAtOffsets([r, c], this.offsets)) {
                     if (cell.value === adj.value) {
-                        return [false, [r, c], `${cell.value} appears another time a ${this.moveType}'s move away`]
+                        return [false, [r, c], `There is another ${cell.value} a ${this.moveType}'s move away`]
                     }
                 }
             }
@@ -426,7 +426,7 @@ class InsuffientCandidatesForUniqueGroup extends Inference {
         var openCells = cells.filter(c => !c.value)
         let canCount = candidateCount(cells)
         let uniqueCandidates = canCount.filter(count => count > 0).length
-        if(uniqueCandidates < openCells.length) {
+        if (uniqueCandidates < openCells.length) {
             let firstOpen = openCells[0]
             return [false, [firstOpen.row, firstOpen.col], `${this.groupName} has ${openCells.length} open cells but only ${uniqueCandidates} values that can fill them`]
         }
@@ -519,7 +519,6 @@ export default class SudokuBoard extends React.Component {
     }
 
     handleClick(e) {
-        e.preventDefault()
         let element = e.currentTarget
         let row = parseInt(element.getAttribute('data-r'))
         let col = parseInt(element.getAttribute('data-c'))
@@ -562,6 +561,7 @@ export default class SudokuBoard extends React.Component {
                     "data-c": c,
                     "class": "cell"
                 }
+                let children = []
 
                 if (this.state.selection) {
                     if (this.state.selection[0] === r && this.state.selection[1] === c) {
@@ -580,13 +580,18 @@ export default class SudokuBoard extends React.Component {
                 if (bad_index && bad_index[0] == r && bad_index[1] == c) {
                     props['class'] += " invalid"
                     props['title'] = message
+                    children.push(<div draggable="true" id="error-message" class="error-message">
+                        <a style={{ float: "right" }} href="#error-message"><i class="fa fa-times" /></a>
+                        {message}
+                    </div>)
                 }
                 if (!cell.value && cell.candidates.has(highlightCandidate)) {
                     props['class'] += " candidate-highlight"
                 }
 
+
                 if (cell.value) {
-                    celldiv = <div {...props} onClick={this.handleClick}><span class="value">{this.board.grid[r][c].value}</span></div>
+                    celldiv = <div {...props} onClick={this.handleClick}><span class="value">{this.board.grid[r][c].value}</span>{children}</div>
                 } else {
                     var v = 1
                     let candidates = []
@@ -597,7 +602,7 @@ export default class SudokuBoard extends React.Component {
                         }
                         candidates.push(<div>{text}</div>)
                     }
-                    celldiv = <div {...props} onClick={this.handleClick}><div class="candidates">{candidates}</div></div>
+                    celldiv = <div {...props} onClick={this.handleClick}><div class="candidates">{candidates}</div>{children}</div>
                 }
                 cells.push(celldiv)
             }
