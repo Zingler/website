@@ -65,6 +65,19 @@
   height: 33%;
 }
 
+.candidates .failed-analysis {
+  color: red;
+}
+
+.candidates .add-digit-analysis {
+  color: blue;
+  font-weight: bold;
+}
+
+.invalid .failed-analysis {
+  color: white;
+}
+
 .candidate-highlight {
   background-color: rgb(205, 243, 255);
 }

@@ -4,14 +4,73 @@ import { PureComponent } from "react"
 import "../styles/sudoku.css"
 
 class Board {
-    constructor() {
-        this.grid = []
+    constructor(grid = undefined) {
+        this.grid = grid
+        if (!this.grid) {
+            this.grid = []
+            for (let i = 0; i < 9; i++) {
+                let row = []
+                for (let j = 0; j < 9; j++) {
+                    row.push(new Cell(i, j))
+                }
+                this.grid.push(row)
+            }
+        }
+    }
+
+    copy() {
+        let grid = []
         for (let i = 0; i < 9; i++) {
             let row = []
             for (let j = 0; j < 9; j++) {
-                row.push(new Cell(i, j))
+                row.push(this.grid[i][j].copy())
             }
-            this.grid.push(row)
+            grid.push(row)
+        }
+        return new Board(grid)
+    }
+
+    cellsWithValue() {
+        var count = 0
+        for (let [cell] of this.elements()) {
+            if (cell.value) {
+                count += 1
+            }
+        }
+        return count
+    }
+
+    applyPending() {
+        for (let [cell] of this.elements()) {
+            cell.applyPending()
+        }
+    }
+
+    clearAnalysis() {
+        for (let [cell] of this.elements()) {
+            cell.clearAnalysis();
+        }
+    }
+
+    runOnePlyAnalysis(rule) {
+        let currentValueCount = this.cellsWithValue()
+        for (let [cell, r, c] of this.elements()) {
+            cell.clearAnalysis()
+            if (!cell.value) {
+                for (let can of cell.candidates) {
+                    let tempBoard = this.copy()
+                    tempBoard.grid[r][c].value = can
+                    while (rule.run(tempBoard)) { tempBoard.applyPending() }
+                    let [good] = rule.valid(tempBoard)
+                    if (!good) {
+                        cell.addFailedOnePlyAnalysis(can)
+                    }
+                    let newCount = tempBoard.cellsWithValue()
+                    if (newCount > currentValueCount + 1) {
+                        cell.addAddDigitOnePlyAnalysis(can)
+                    }
+                }
+            }
         }
     }
 
@@ -149,7 +208,7 @@ class AllUniqueRule extends Rule {
         for (let index of this.cell_indexes) {
             let cell = board.grid[index[0]][index[1]]
             if (cell.candidates.has(num)) {
-                cell.value = num
+                cell.pendingValue = num
                 cell.solver_determined = true
             }
         }
@@ -178,11 +237,12 @@ class AllUniqueRule extends Rule {
         for (let index of this.cell_indexes) {
             let cell = board.grid[index[0]][index[1]]
             if (cell.candidates.size == 1) {
-                cell.value = cell.candidates.values().next().value
+                cell.pendingValue = cell.candidates.values().next().value
                 cell.solver_determined = true
                 changes = true
             }
         }
+        return changes
     }
 
     run(board) {
@@ -362,6 +422,17 @@ class CellMustHaveNumberRule extends Rule {
         }
         return [true, undefined]
     }
+
+    run(board) {
+        var changed = false
+        for (let [cell, r, c] of board.elements()) {
+            if (cell.value && cell.candidates.size > 0) {
+                cell.clearCandidates()
+                changed = true
+            }
+        }
+        return changed
+    }
 }
 
 class Inference {
@@ -434,11 +505,33 @@ class InsuffientCandidatesForUniqueGroup extends Inference {
     }
 }
 
+class OnePlyAnalysisRule extends Rule {
+    valid(board) {
+        for (let [cell, row, col] of board.elements()) {
+            if (!cell.value && cell.failedAnalysis.size > 0 && cell.failedAnalysis.size == cell.candidates.size) {
+                return [false, [row, col], `Analysis of candidates shows that any value here leads to an invalid board`]
+            }
+        }
+        return [true]
+    }
+}
+
 class Cell {
-    constructor(row, col) {
-        this.clear()
+    constructor(row, col, candidates = undefined) {
+        this.candidates = candidates
+        if (!this.candidates) {
+            this.clear()
+        }
         this.row = row
         this.col = col
+        this.clearAnalysis()
+    }
+
+    copy() {
+        let candidates = new Set(this.candidates.values())
+        let cell = new Cell(this.row, this.col, candidates)
+        cell._value = this._value
+        return cell
     }
 
     remove(candidate) {
@@ -451,6 +544,10 @@ class Cell {
         this.resetCandidates()
     }
 
+    clearCandidates() {
+        this.candidates = new Set()
+    }
+
     resetCandidates() {
         if (this.solver_determined) {
             this._value = undefined
@@ -461,13 +558,37 @@ class Cell {
         }
     }
 
+    addFailedOnePlyAnalysis(candidate) {
+        this.failedAnalysis.add(candidate)
+    }
+    addAddDigitOnePlyAnalysis(candidate) {
+        this.addDigitAnalysis.add(candidate)
+    }
+
+    clearAnalysis() {
+        this.failedAnalysis = new Set()
+        this.addDigitAnalysis = new Set()
+    }
+
     get value() {
         return this._value
     }
 
     set value(v) {
         this._value = v
-        this.candidates.clear()
+    }
+
+    set pendingValue(v) {
+        this._pendingValue = v
+    }
+
+    applyPending() {
+        if (this._pendingValue) {
+            this.value = this._pendingValue
+            this._pendingValue = undefined
+            return true
+        }
+        return false
     }
 
     asString() {
@@ -480,17 +601,21 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
-        this.globalRules = [new CellMustHaveNumberRule(), new SudokuRule()]
+        this.globalRules = [new CellMustHaveNumberRule(), new SudokuRule(), new OnePlyAnalysisRule()]
         this.rule = new AggregateRule(this.globalRules)
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
         this.handleKeyPress = this.handleKeyPress.bind(this)
         this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
+        this.handleSettingChange = this.handleSettingChange.bind(this)
 
         this.state = {
             selection: undefined,
             board: this.board,
-            globalRules: []
+            globalRules: [],
+            settings: {
+                "OnePlyAnalysis": false
+            },
         }
     }
 
@@ -512,7 +637,18 @@ export default class SudokuBoard extends React.Component {
             this.board.grid[r][c].clear()
             this.board.reset()
         }
-        while (this.rule.run(this.board)) { }
+        this.board.reset()
+        this.updateBoard()
+    }
+
+    updateBoard(withReset = false) {
+        if (withReset) {
+            this.board.reset()
+        }
+        while (this.rule.run(this.board)) { this.board.applyPending() }
+        if (this.state.settings.OnePlyAnalysis) {
+            this.runAnalysis()
+        }
         this.setState(prev => ({
             board: this.board
         }))
@@ -537,8 +673,26 @@ export default class SudokuBoard extends React.Component {
             this.globalRules = this.globalRules.filter(r => !(r instanceof cls))
         }
         this.rule = new AggregateRule(this.globalRules)
-        this.board.reset()
-        while (this.rule.run(this.board)) { }
+        this.updateBoard(true)
+    }
+
+    handleSettingChange(e) {
+        let target = e.currentTarget
+        let value = target.value
+        this.setState((state, props) => ({
+            settings: {
+                ...state.settings,
+                [value]: target.checked
+            }
+        }))
+        if (value == "OnePlyAnalysis") {
+            this.board.clearAnalysis()
+        }
+        this.updateBoard(true)
+    }
+
+    runAnalysis() {
+        this.board.runOnePlyAnalysis(this.rule)
         this.setState(prev => ({
             board: this.board
         }))
@@ -600,7 +754,14 @@ export default class SudokuBoard extends React.Component {
                         if (cell.candidates.has(v)) {
                             text = v
                         }
-                        candidates.push(<div>{text}</div>)
+                        let candidateProps = {}
+                        if (cell.addDigitAnalysis.has(v)) {
+                            candidateProps["class"] = "add-digit-analysis"
+                        }
+                        if (cell.failedAnalysis.has(v)) {
+                            candidateProps["class"] = "failed-analysis"
+                        }
+                        candidates.push(<div {...candidateProps}>{text}</div>)
                     }
                     celldiv = <div {...props} onClick={this.handleClick}><div class="candidates">{candidates}</div>{children}</div>
                 }
@@ -628,6 +789,12 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="KnightRule" onChange={this.handleGlobalRuleChange} />
                     Knight Move restriction
                 </label>
+                <h2>Solver settings</h2>
+                <label>
+                    <input type="checkbox" value="OnePlyAnalysis" onChange={this.handleSettingChange} />
+                    Run One Ply Analysis
+                </label>
+
             </div>
         );
     }
