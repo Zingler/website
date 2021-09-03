@@ -77,9 +77,9 @@ class AggregateRule extends Rule {
 
     valid(board) {
         for (let r of this.rules) {
-            let [good, index] = r.valid(board)
+            let [good, index, message] = r.valid(board)
             if (!good) {
-                return [good, index]
+                return [good, index, message]
             }
         }
         return [true, undefined];
@@ -98,10 +98,11 @@ class AggregateRule extends Rule {
 }
 
 class AllUniqueRule extends Rule {
-    constructor(cell_indexes) {
+    constructor(cell_indexes, groupName) {
         super()
         this.cell_indexes = cell_indexes
-        this.inferences = [new InsuffientCandidatesForUniqueGroup(cell_indexes)]
+        this.groupName = groupName
+        this.inferences = [new InsuffientCandidatesForUniqueGroup(cell_indexes, groupName)]
     }
 
     valid(board) {
@@ -112,14 +113,14 @@ class AllUniqueRule extends Rule {
                 continue;
             }
             if (check_set.has(v)) {
-                return [false, index];
+                return [false, index, `${this.groupName} contains more than one ${v}`];
             }
             check_set.add(v)
         }
         for(let i of this.inferences) {
-            let [good, badIndex] = i.valid(board)
+            let [good, badIndex, message] = i.valid(board)
             if (!good) {
-                return [false, badIndex]
+                return [false, badIndex, message]
             }
         }
         return [true, undefined];
@@ -212,7 +213,7 @@ class RowUniqueRule extends AggregateRule {
             for (let c = 0; c < 9; c++) {
                 indexes.push([r, c])
             }
-            rules.push(new AllUniqueRule(indexes))
+            rules.push(new AllUniqueRule(indexes, `Row ${r+1}`))
         }
         super(rules)
     }
@@ -226,7 +227,7 @@ class ColUniqueRule extends AggregateRule {
             for (let r = 0; r < 9; r++) {
                 indexes.push([r, c])
             }
-            rules.push(new AllUniqueRule(indexes))
+            rules.push(new AllUniqueRule(indexes, `Column ${c+1}`))
         }
         super(rules)
     }
@@ -243,7 +244,7 @@ class BoxUniqueRule extends AggregateRule {
                         indexes.push([r, c])
                     }
                 }
-                rules.push(new AllUniqueRule(indexes))
+                rules.push(new AllUniqueRule(indexes, `Box ${br*3+bc+1}`))
             }
         }
         super(rules)
@@ -251,9 +252,10 @@ class BoxUniqueRule extends AggregateRule {
 }
 
 class NonDuplicatesAtOffsets extends Rule {
-    constructor(offsets) {
+    constructor(offsets, moveType) {
         super()
         this.offsets = offsets;
+        this.move_type = moveType;
     }
 
     valid(board) {
@@ -261,7 +263,7 @@ class NonDuplicatesAtOffsets extends Rule {
             if (cell.value) {
                 for (let adj of board.cellsAtOffsets([r, c], this.offsets)) {
                     if (cell.value === adj.value) {
-                        return [false, [r, c]]
+                        return [false, [r, c], `${cell.value} appears another time a ${this.moveType}'s move away`]
                     }
                 }
             }
@@ -294,7 +296,7 @@ class KnightRule extends NonDuplicatesAtOffsets {
                 offsets.push([b, l])
             }
         }
-        super(offsets)
+        super(offsets, "Knight")
     }
 }
 
@@ -308,7 +310,7 @@ class KingRule extends NonDuplicatesAtOffsets {
                 }
             }
         }
-        super(offsets)
+        super(offsets, "King")
     }
 }
 
@@ -320,7 +322,7 @@ class NonConsecutiveRule extends Rule {
             if (cell.value) {
                 for (let adj of board.cellsAtOffsets([r, c], NonConsecutiveRule.adjOffsets)) {
                     if (Math.abs(cell.value - adj.value) === 1) {
-                        return [false, [r, c]]
+                        return [false, [r, c], `Adjacent to a ${adj.value} which is one away from this cell's value of ${cell.value}`]
                     }
                 }
             }
@@ -355,7 +357,7 @@ class CellMustHaveNumberRule extends Rule {
     valid(board) {
         for (let [cell, r, c] of board.elements()) {
             if (!cell.value && cell.candidates.size == 0) {
-                return [false, [r, c]]
+                return [false, [r, c], "No possible value can go here"]
             }
         }
         return [true, undefined]
@@ -413,9 +415,10 @@ class PointedPairInference extends Inference {
 }
 
 class InsuffientCandidatesForUniqueGroup extends Inference {
-    constructor(indexes) {
+    constructor(indexes, groupName) {
         super()
         this.indexes = indexes
+        this.groupName = groupName
     }
 
     valid(board) {
@@ -425,7 +428,7 @@ class InsuffientCandidatesForUniqueGroup extends Inference {
         let uniqueCandidates = canCount.filter(count => count > 0).length
         if(uniqueCandidates < openCells.length) {
             let firstOpen = openCells[0]
-            return [false, [firstOpen.row, firstOpen.col]]
+            return [false, [firstOpen.row, firstOpen.col], `${this.groupName} has ${openCells.length} open cells but only ${uniqueCandidates} values that can fill them`]
         }
         return [true, undefined]
     }
@@ -543,7 +546,7 @@ export default class SudokuBoard extends React.Component {
     }
 
     render() {
-        let [valid, bad_index] = this.rule.valid(this.board)
+        let [valid, bad_index, message] = this.rule.valid(this.board)
         let rows = []
         if (this.state.selection) {
             let selectedCell = this.board.grid[this.state.selection[0]][this.state.selection[1]]
@@ -576,6 +579,7 @@ export default class SudokuBoard extends React.Component {
                 }
                 if (bad_index && bad_index[0] == r && bad_index[1] == c) {
                     props['class'] += " invalid"
+                    props['title'] = message
                 }
                 if (!cell.value && cell.candidates.has(highlightCandidate)) {
                     props['class'] += " candidate-highlight"
