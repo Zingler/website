@@ -113,23 +113,9 @@ export class AllUniqueRule extends Rule {
         return changes
     }
 
-    loneSingle(board) {
-        var changes = false
-        for (let index of this.cell_indexes) {
-            let cell = board.grid[index[0]][index[1]]
-            if (cell.candidates.size == 1) {
-                cell.pendingValue = cell.candidates.values().next().value
-                cell.solver_determined = true
-                changes = true
-            }
-        }
-        return changes
-    }
-
     run(board) {
         var changed = this.prune(board)
         changed |= this.lastLocation(board)
-        changed |= this.loneSingle(board)
         return changed
     }
 }
@@ -302,6 +288,7 @@ export class CellMustHaveNumberRule extends Rule {
         }
         return changed
     }
+    // TODO include lone single logic
 }
 
 export class Inference {

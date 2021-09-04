@@ -4,6 +4,7 @@ import "../../styles/sudoku.css"
 import {Board} from "./board.js"
 import * as Logic from "./logic.js";
 import * as Analysis from "./analysis.js"
+import { search } from "./search";
 
 export default class SudokuBoard extends React.Component {
     constructor(props) {
@@ -17,6 +18,7 @@ export default class SudokuBoard extends React.Component {
         this.handleKeyPress = this.handleKeyPress.bind(this)
         this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
         this.handleSettingChange = this.handleSettingChange.bind(this)
+        this.findSolution = this.findSolution.bind(this)
 
         this.state = {
             selection: undefined,
@@ -111,6 +113,16 @@ export default class SudokuBoard extends React.Component {
         this.setState(prev => ({
             board: this.board
         }))
+    }
+     
+    findSolution() {
+        let [found, actions] = search(this.board, this.rule)
+        if(found) {
+            for(let [r,c,v] of actions) {
+                this.board.grid[r][c].value = v
+            }
+        }
+        this.updateBoard()
     }
 
     render() {
@@ -212,6 +224,7 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="OnePlyAnalysis" onChange={this.handleSettingChange} />
                     Run One Ply Analysis
                 </label>
+                <button onClick={this.findSolution}>Find a solution</button>
             </div>
         );
     }

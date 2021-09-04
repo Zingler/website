@@ -25,6 +25,15 @@ export class Board {
         return new Board(grid)
     }
 
+    full() {
+        for(let [cell] of this.elements()) {
+            if(!cell.value) {
+                return false
+            }
+        }
+        return true
+    }
+
     cellsWithValue() {
         var count = 0
         for (let [cell] of this.elements()) {
@@ -33,6 +42,14 @@ export class Board {
             }
         }
         return count
+    }
+
+    * openCells() {
+        for(let [cell] of this.elements()) {
+            if(!cell.value) {
+                yield cell
+            }
+        }
     }
 
     applyPending() {
