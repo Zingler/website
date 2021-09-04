@@ -4,9 +4,9 @@ import Wave from "../../components/wave"
 import Wave2D from "../../components/wave2d"
 import Project from "../../components/project"
 import "../../styles/code.css"
-import "../../components/sudoku"
+import "../../components/sudoku/view"
 import { Helmet } from "react-helmet"
-import SudokuBoard from "../../components/sudoku"
+import SudokuBoard from "../../components/sudoku/view"
 
 // markup
 const SudokuPage = () => {
