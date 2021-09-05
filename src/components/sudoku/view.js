@@ -11,7 +11,7 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
-        this.globalRules = [new (Logic.CellMustHaveNumberRule)(), new Logic.SudokuRule(), new Analysis.OnePlyAnalysisRule()]
+        this.globalRules = [new Logic.CellMustHaveNumberRule(), new Logic.SudokuRule(), new Analysis.OnePlyAnalysisRule()]
         this.rule = new Logic.AggregateRule(this.globalRules)
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)

@@ -1,4 +1,4 @@
-import {candidateCount} from './utils.js'
+import { candidateCount } from './utils.js'
 
 export class Rule {
     constructor() {
@@ -229,6 +229,91 @@ export class KingRule extends NonDuplicatesAtOffsets {
     }
 }
 
+class OrderedCellRule extends Rule {
+    constructor(cell_indexes) {
+        super()
+        this.cell_indexes = cell_indexes
+    }
+}
+
+export class ThermoRule extends OrderedCellRule {
+    constructor(cell_indexes) {
+        super(cell_indexes)
+    }
+
+    valid(board) {
+        var current_value = 0
+        for (let index of this.cell_indexes) {
+            let cell = board.grid[index[0]][index[1]]
+            if (cell.value) {
+                if (cell.value <= current_value) {
+                    return [false, index, `Thermometer requires this cell to be at least ${current_value + 1}`]
+                }
+                current_value = cell.value
+            }
+        }
+        return [true]
+    }
+}
+
+function findDuplicate(values) {
+    let s = new Set()
+    for (let v of values) {
+        if (s.has(v)) {
+            return v
+        }
+        s.add(v)
+    }
+    return undefined
+}
+
+export class AnyOrderConsecutiveRule extends OrderedCellRule {
+    constructor(cell_indexes) {
+        super(cell_indexes)
+        this.max_range = cell_indexes.length - 1
+    }
+
+    valid(board) {
+        let values = this.cell_indexes.map(i => board.grid[i[0]][i[1]]).filter(c => c.value).map(c => c.value)
+        if (values.length == 0) {
+            return [true]
+        }
+        let dup = findDuplicate(values)
+        if (dup) {
+            return [false, this.cell_indexes[0], `Line contains multiple ${dup}'s`]
+        }
+
+        let min = Math.min(...values)
+        let max = Math.max(...values)
+        let range = max - min
+        if (range > this.max_range) {
+            return [false, this.cell_indexes[0], `Difference in max and min values on this line must be less than ${this.max_range + 1} but was ${range}`]
+        }
+        return [true]
+    }
+}
+
+export class AdjacentMinDifferenceRule extends OrderedCellRule {
+    constructor(cell_indexes, min_difference) {
+        super(cell_indexes)
+        this.min_difference = min_difference
+    }
+
+    valid(board) {
+        for (let i = 0; i < this.cell_indexes.length - 1; i++) {
+            let start = board.grid[this.cell_indexes[i][0]][this.cell_indexes[i][1]]
+            let end = board.grid[this.cell_indexes[i + 1][0]][this.cell_indexes[i + 1][1]]
+            if (start.value && end.value) {
+                let diff = Math.abs(start.value - end.value)
+                if (diff < this.min_difference) {
+                    return [false, this.cell_indexes[i], `Difference between this cell (${start.value}) and the next cell (${end.value}) must be at least ${this.min_difference}`]
+                }
+            }
+        }
+        return [true]
+    }
+}
+
 export class NonConsecutiveRule extends Rule {
     static adjOffsets = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 
@@ -280,6 +365,13 @@ export class CellMustHaveNumberRule extends Rule {
 
     run(board) {
         var changed = false
+        changed |= this.clearCandidates(board)
+        changed |= this.loneDigit(board)
+        return changed
+    }
+
+    clearCandidates(board) {
+        var changed = false
         for (let [cell, r, c] of board.elements()) {
             if (cell.value && cell.candidates.size > 0) {
                 cell.clearCandidates()
@@ -288,7 +380,18 @@ export class CellMustHaveNumberRule extends Rule {
         }
         return changed
     }
-    // TODO include lone single logic
+
+    loneDigit(board) {
+        let changed = false
+        for (let [cell] of board.elements()) {
+            if (cell.candidates.size == 1) {
+                cell.pendingValue = cell.candidates.values().next().value
+                cell.solver_determined = true
+                changed = true
+            }
+        }
+        return changed
+    }
 }
 
 export class Inference {
