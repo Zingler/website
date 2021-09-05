@@ -38,3 +38,23 @@ function recurse(board, rule) {
 export function search(board, rule) {
     return recurse(board, rule)
 }
+
+export function redundancy(board, rule) {
+    let result = []
+    if(!board.full()) {
+        return []
+    }
+    for(let [cell] of board.elements()) {
+        if(cell.value && !cell.solver_determined) {
+            let temp = board.copy()
+            temp.grid[cell.row][cell.col].clear()
+            temp.clearSolverDetermined()
+            temp.reset()
+            while (rule.run(temp)) {temp.applyPending()}
+            if(temp.full()) {
+                result.push([cell.row, cell.col])
+            }
+        }
+    }
+    return result
+}

@@ -41,6 +41,14 @@
   background-color:rgb(255, 0,0, .5) !important;
 }
 
+.redundant {
+  color: grey;
+}
+
+.hidden * {
+  visibility: hidden;
+}
+
 .error-message {
   position: absolute;
   left: 100%;

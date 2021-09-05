@@ -30,7 +30,8 @@ export default class SudokuBoard extends React.Component {
             userRules: [],
             settings: {
                 "OnePlyAnalysis": false,
-                "HideCandidates": false
+                "HideCandidates": false,
+                "HideSolverDetermined": false
             },
         }
     }
@@ -74,6 +75,11 @@ export default class SudokuBoard extends React.Component {
             this.runAnalysis()
         } else {
             this.board.clearAnalysis()
+        }
+        if(this.state.settings.Redundency) {
+            this.board.checkRedundency(this.rule)
+        } else {
+            this.board.clearRedundency()
         }
         this.setState(prev => ({
             board: this.board
@@ -192,6 +198,9 @@ export default class SudokuBoard extends React.Component {
                 if (cell.solver_determined) {
                     props['className'] += " solver"
                 }
+                if (cell.redundant) {
+                    props['className'] += " redundant"
+                }
                 if (r == 2 || r == 5) {
                     props['className'] += " bottom-border"
                 }
@@ -209,7 +218,9 @@ export default class SudokuBoard extends React.Component {
                 if (!cell.value && cell.candidates.has(highlightCandidate)) {
                     props['className'] += " candidate-highlight"
                 }
-
+                if(this.state.settings.HideSolverDetermined && cell.solver_determined) {
+                    props['className'] += " hidden"
+                }
 
                 if (cell.value) {
                     celldiv = <div {...props} onClick={this.handleClick}><span className="value">{this.board.grid[r][c].value}</span>{children}</div>
@@ -267,6 +278,13 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="OnePlyAnalysis" onChange={this.handleSettingChange} />
                     Run One Ply Analysis
                 </label>
+                <br></br>
+                <label>
+                    <input type="checkbox" value="Redundency" onChange={this.handleSettingChange} />
+                    Analyse redundent digits
+                </label>
+                <br></br>
+
                 <button onClick={this.findSolution}>Find a solution</button>
                 <h2>Rules</h2>
                 <button onClick={this.addRule(Logic.ThermoRule)}>Add Thermometer</button>
@@ -276,6 +294,11 @@ export default class SudokuBoard extends React.Component {
                 <label>
                     <input type="checkbox" value="HideCandidates" onChange={this.handleSettingChange} />
                     Hide Candidates
+                </label>
+                <br></br>
+                <label>
+                    <input type="checkbox" value="HideSolverDetermined" onChange={this.handleSettingChange} />
+                    Hide Solver Determined
                 </label>
 
             </div>

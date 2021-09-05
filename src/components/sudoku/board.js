@@ -1,3 +1,5 @@
+import { redundancy } from "./search"
+
 export class Board {
     constructor(grid = undefined) {
         this.grid = grid
@@ -58,6 +60,20 @@ export class Board {
         }
     }
 
+    checkRedundency(rule) {
+        this.clearRedundency()
+        let indexes = redundancy(this, rule)
+        for(let index of indexes) {
+            this.grid[index[0]][index[1]].redundant = true
+        }
+    }
+
+    clearRedundency() {
+        for(let [cell] of this.elements()) {
+            delete cell.redundant
+        }
+    }
+
     clearAnalysis() {
         for (let [cell] of this.elements()) {
             cell.clearAnalysis();
@@ -90,6 +106,14 @@ export class Board {
         }
         if(mvp[0] > 0) {
             this.grid[mvp[1]][mvp[2]].mvp = mvp[3]
+        }
+    }
+
+    clearSolverDetermined() {
+        for(let [cell] of this.elements()) {
+            if(cell.solver_determined) {
+                cell.clear()
+            }
         }
     }
 
@@ -153,6 +177,7 @@ class Cell {
         let candidates = new Set(this.candidates.values())
         let cell = new Cell(this.row, this.col, candidates)
         cell._value = this._value
+        cell.solver_determined = this.solver_determined
         return cell
     }
 
