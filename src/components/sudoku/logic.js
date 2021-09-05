@@ -254,6 +254,44 @@ export class ThermoRule extends IDMixin(OrderedCellRule, "Thermo") {
         }
         return [true]
     }
+
+    run(board) {
+        var changed = false
+
+        // Restrict candidates from the bulb to the tip
+        var min = 1
+        for (let i=0; i<this.cell_indexes.length; i++) {
+            let index = this.cell_indexes[i]
+            let cell = board.grid[index[0]][index[1]]
+            if (cell.value) {
+                min = cell.value
+            } else {
+                for(let j=1; j<min; j++) {
+                    changed |= cell.remove(j)
+                }
+                min = Math.min(10,...cell.candidates)
+            }
+            min += 1
+        }
+
+        // Restrict candidates from the tip to the bulb
+        var max = 9
+        for (let i=this.cell_indexes.length-1; i>=0; i--) {
+            let index = this.cell_indexes[i]
+            let cell = board.grid[index[0]][index[1]]
+            if (cell.value) {
+                max = cell.value
+            } else {
+                for(let j=9; j>max; j--) {
+                    changed |= cell.remove(j)
+                }
+                max = Math.max(0, ...cell.candidates)
+            }
+            max -= 1
+        }
+
+        return changed
+    }
 }
 
 function findDuplicate(values) {
