@@ -72,6 +72,8 @@ export default class SudokuBoard extends React.Component {
         while (this.rule.run(this.board)) { this.board.applyPending() }
         if (this.state.settings.OnePlyAnalysis) {
             this.runAnalysis()
+        } else {
+            this.board.clearAnalysis()
         }
         this.setState(prev => ({
             board: this.board
