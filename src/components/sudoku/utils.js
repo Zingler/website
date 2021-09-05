@@ -9,3 +9,14 @@ export function candidateCount(cells) {
     }
     return candidate_count
 }
+
+
+export const IDMixin = (C, prefix) => class extends C {
+    static _id = 1
+
+    constructor(...args) {
+        super(...args)
+        this.id = prefix + " #" + this.constructor._id
+        this.constructor._id += 1
+    }
+}

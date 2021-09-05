@@ -1,4 +1,4 @@
-import { candidateCount } from './utils.js'
+import { candidateCount, IDMixin } from './utils.js'
 
 export class Rule {
     constructor() {
@@ -236,7 +236,7 @@ class OrderedCellRule extends Rule {
     }
 }
 
-export class ThermoRule extends OrderedCellRule {
+export class ThermoRule extends IDMixin(OrderedCellRule, "Thermo") {
     constructor(cell_indexes) {
         super(cell_indexes)
     }
@@ -267,7 +267,7 @@ function findDuplicate(values) {
     return undefined
 }
 
-export class AnyOrderConsecutiveRule extends OrderedCellRule {
+export class AnyOrderConsecutiveRule extends IDMixin(OrderedCellRule, "AnyOrderConsecutive") {
     constructor(cell_indexes) {
         super(cell_indexes)
         this.max_range = cell_indexes.length - 1
@@ -293,8 +293,8 @@ export class AnyOrderConsecutiveRule extends OrderedCellRule {
     }
 }
 
-export class AdjacentMinDifferenceRule extends OrderedCellRule {
-    constructor(cell_indexes, min_difference) {
+export class AdjacentMinDifferenceRule extends IDMixin(OrderedCellRule, "AdjacentMinDifference") {
+    constructor(cell_indexes, { min_difference = 3 } = {}) {
         super(cell_indexes)
         this.min_difference = min_difference
     }

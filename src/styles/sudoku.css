@@ -9,6 +9,10 @@
   position: relative;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 .cell .value {
   text-align: center;
 }

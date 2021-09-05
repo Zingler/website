@@ -1,7 +1,7 @@
 import React from "react"
 import { PureComponent } from "react"
 import "../../styles/sudoku.css"
-import {Board} from "./board.js"
+import { Board } from "./board.js"
 import * as Logic from "./logic.js";
 import * as Analysis from "./analysis.js"
 import { search } from "./search";
@@ -12,6 +12,7 @@ export default class SudokuBoard extends React.Component {
 
         this.board = new Board()
         this.globalRules = [new Logic.CellMustHaveNumberRule(), new Logic.SudokuRule(), new Analysis.OnePlyAnalysisRule()]
+        this.userRules = []
         this.rule = new Logic.AggregateRule(this.globalRules)
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
@@ -19,9 +20,10 @@ export default class SudokuBoard extends React.Component {
         this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
         this.handleSettingChange = this.handleSettingChange.bind(this)
         this.findSolution = this.findSolution.bind(this)
+        this.addRule = this.addRule.bind(this)
 
         this.state = {
-            selection: undefined,
+            selection: [],
             board: this.board,
             globalRules: [],
             settings: {
@@ -30,13 +32,21 @@ export default class SudokuBoard extends React.Component {
         }
     }
 
+    singleSelection() {
+        if (this.state.selection.length == 1) {
+            return this.state.selection[0]
+        }
+        return undefined
+    }
+
     handleKeyPress(e) {
         e.preventDefault()
-        if (!this.state.selection) {
+        let selection = this.singleSelection()
+        if (!selection) {
             return;
         }
-        let r = this.state.selection[0]
-        let c = this.state.selection[1]
+        let r = selection[0]
+        let c = selection[1]
 
         if (e.key > '0' && e.key <= '9') {
             let value = parseInt(e.key, 10)
@@ -69,9 +79,15 @@ export default class SudokuBoard extends React.Component {
         let element = e.currentTarget
         let row = parseInt(element.getAttribute('data-r'))
         let col = parseInt(element.getAttribute('data-c'))
-        this.setState(prev => ({
-            selection: [row, col]
-        }))
+        if (e.shiftKey) {
+            this.setState((state, props) => ({
+                selection: state.selection.concat([[row, col]])
+            }))
+        } else {
+            this.setState(prev => ({
+                selection: [[row, col]]
+            }))
+        }
     }
 
     static rule_constructors = {
@@ -91,6 +107,17 @@ export default class SudokuBoard extends React.Component {
         }
         this.rule = new Logic.AggregateRule(this.globalRules)
         this.updateBoard(true)
+    }
+
+    addRule(RuleConstructor) {
+        let adder = () => {
+            let rule = new RuleConstructor(this.state.selection)
+            this.userRules.push(rule)
+            let rules = this.globalRules.concat(this.userRules)
+            this.rule = new Logic.AggregateRule(rules)
+            this.updateBoard(true)
+        }
+        return adder
     }
 
     handleSettingChange(e) {
@@ -114,11 +141,11 @@ export default class SudokuBoard extends React.Component {
             board: this.board
         }))
     }
-     
+
     findSolution() {
         let [found, actions] = search(this.board, this.rule)
-        if(found) {
-            for(let [r,c,v] of actions) {
+        if (found) {
+            for (let [r, c, v] of actions) {
                 this.board.grid[r][c].value = v
             }
         }
@@ -128,9 +155,9 @@ export default class SudokuBoard extends React.Component {
     render() {
         let [valid, bad_index, message] = this.rule.valid(this.board)
         let rows = []
-        if (this.state.selection) {
-            let selectedCell = this.board.grid[this.state.selection[0]][this.state.selection[1]]
-            var highlightCandidate = selectedCell.value
+        let selectedCells = this.state.selection.map(([r, c]) => this.board.grid[r][c])
+        if (this.singleSelection()) {
+            var highlightCandidate = selectedCells[0].value
         }
         for (let r = 0; r < this.board.grid.length; r++) {
             let cells = []
@@ -144,10 +171,8 @@ export default class SudokuBoard extends React.Component {
                 }
                 let children = []
 
-                if (this.state.selection) {
-                    if (this.state.selection[0] === r && this.state.selection[1] === c) {
-                        props['class'] += " selected";
-                    }
+                if (selectedCells.find(x => x === cell)) {
+                    props['class'] += " selected";
                 }
                 if (cell.solver_determined) {
                     props['class'] += " solver"
@@ -225,6 +250,10 @@ export default class SudokuBoard extends React.Component {
                     Run One Ply Analysis
                 </label>
                 <button onClick={this.findSolution}>Find a solution</button>
+                <h2>Rules</h2>
+                <button onClick={this.addRule(Logic.ThermoRule)}>Add Thermometer</button>
+                <button onClick={this.addRule(Logic.AnyOrderConsecutiveRule)}>Add Any Order Consecutive Line</button>
+                <button onClick={this.addRule(Logic.AdjacentMinDifferenceRule)}>Add Adjacent Min Difference Line</button>
             </div>
         );
     }
