@@ -8,7 +8,7 @@ export default class Layout extends React.Component {
     }
     render() {
         return (
-            <div class="content" style={{ maxWidth: 960, margin: "auto" }}>
+            <div className="content" style={{ maxWidth: 960, margin: "auto" }}>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></link>
 
                 <nav className="navbar">
@@ -30,7 +30,7 @@ export default class Layout extends React.Component {
                         <li><a href="/resume">Resumé</a></li>
                     </ul>
                 </nav>
-                <div class="main-content">
+                <div className="main-content">
                     {this.props.children}
                 </div>
             </div>

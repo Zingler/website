@@ -5,6 +5,7 @@ import { Board } from "./board.js"
 import * as Logic from "./logic.js";
 import * as Analysis from "./analysis.js"
 import { search } from "./search";
+import { box_width, RuleCanvas } from "./rulerender.js"
 
 export default class SudokuBoard extends React.Component {
     constructor(props) {
@@ -12,8 +13,8 @@ export default class SudokuBoard extends React.Component {
 
         this.board = new Board()
         this.globalRules = [new Logic.CellMustHaveNumberRule(), new Logic.SudokuRule(), new Analysis.OnePlyAnalysisRule()]
-        this.userRules = []
         this.rule = new Logic.AggregateRule(this.globalRules)
+        this.userRules = []
         this.rule.run(this.board)
         this.handleClick = this.handleClick.bind(this)
         this.handleKeyPress = this.handleKeyPress.bind(this)
@@ -26,8 +27,10 @@ export default class SudokuBoard extends React.Component {
             selection: [],
             board: this.board,
             globalRules: [],
+            userRules: [],
             settings: {
-                "OnePlyAnalysis": false
+                "OnePlyAnalysis": false,
+                "HideCandidates": false
             },
         }
     }
@@ -84,6 +87,15 @@ export default class SudokuBoard extends React.Component {
                 selection: state.selection.concat([[row, col]])
             }))
         } else {
+            if (this.singleSelection()) {
+                let s = this.singleSelection()
+                if (s[0] == row && s[1] == col) { // Allow deselecting the current cell
+                    this.setState(prev => ({
+                        selection: []
+                    }))
+                    return;
+                }
+            }
             this.setState(prev => ({
                 selection: [[row, col]]
             }))
@@ -112,9 +124,10 @@ export default class SudokuBoard extends React.Component {
     addRule(RuleConstructor) {
         let adder = () => {
             let rule = new RuleConstructor(this.state.selection)
-            this.userRules.push(rule)
+            this.userRules = this.userRules.concat([rule])
             let rules = this.globalRules.concat(this.userRules)
             this.rule = new Logic.AggregateRule(rules)
+            this.setState(prev => ({ userRules: this.userRules }))
             this.updateBoard(true)
         }
         return adder
@@ -167,66 +180,69 @@ export default class SudokuBoard extends React.Component {
                 var props = {
                     "data-r": r,
                     "data-c": c,
-                    "class": "cell"
+                    "className": "cell"
                 }
                 let children = []
 
                 if (selectedCells.find(x => x === cell)) {
-                    props['class'] += " selected";
+                    props['className'] += " selected";
                 }
                 if (cell.solver_determined) {
-                    props['class'] += " solver"
+                    props['className'] += " solver"
                 }
                 if (r == 2 || r == 5) {
-                    props['class'] += " bottom-border"
+                    props['className'] += " bottom-border"
                 }
                 if (c == 2 || c == 5) {
-                    props['class'] += " right-border"
+                    props['className'] += " right-border"
                 }
                 if (bad_index && bad_index[0] == r && bad_index[1] == c) {
-                    props['class'] += " invalid"
+                    props['className'] += " invalid"
                     props['title'] = message
-                    children.push(<div draggable="true" id="error-message" class="error-message">
-                        <a style={{ float: "right" }} href="#error-message"><i class="fa fa-times" /></a>
+                    children.push(<div draggable="true" id="error-message" className="error-message">
+                        <a style={{ float: "right" }} href="#error-message"><i className="fa fa-times" /></a>
                         {message}
                     </div>)
                 }
                 if (!cell.value && cell.candidates.has(highlightCandidate)) {
-                    props['class'] += " candidate-highlight"
+                    props['className'] += " candidate-highlight"
                 }
 
 
                 if (cell.value) {
-                    celldiv = <div {...props} onClick={this.handleClick}><span class="value">{this.board.grid[r][c].value}</span>{children}</div>
+                    celldiv = <div {...props} onClick={this.handleClick}><span className="value">{this.board.grid[r][c].value}</span>{children}</div>
                 } else {
                     var v = 1
                     let candidates = []
-                    for (let v = 1; v <= 9; v++) {
-                        var text = " "
-                        if (cell.candidates.has(v)) {
-                            text = v
+                    if (this.state.settings["HideCandidates"] == false) {
+                        for (let v = 1; v <= 9; v++) {
+                            var text = " "
+                            if (cell.candidates.has(v)) {
+                                text = v
+                            }
+                            let candidateProps = {}
+                            if (cell.addDigitAnalysis.has(v)) {
+                                candidateProps["className"] = "add-digit-analysis"
+                            }
+                            if (cell.mvp && cell.mvp == v) {
+                                candidateProps["className"] = "mvp"
+                            }
+                            if (cell.failedAnalysis.has(v)) {
+                                candidateProps["className"] = "failed-analysis"
+                            }
+                            candidates.push(<div key={v} {...candidateProps}>{text}</div>)
                         }
-                        let candidateProps = {}
-                        if (cell.addDigitAnalysis.has(v)) {
-                            candidateProps["class"] = "add-digit-analysis"
-                        }
-                        if (cell.mvp && cell.mvp == v) {
-                            candidateProps["class"] = "mvp"
-                        }
-                        if (cell.failedAnalysis.has(v)) {
-                            candidateProps["class"] = "failed-analysis"
-                        }
-                        candidates.push(<div {...candidateProps}>{text}</div>)
                     }
-                    celldiv = <div {...props} onClick={this.handleClick}><div class="candidates">{candidates}</div>{children}</div>
+                    celldiv = <div key={"cell" + r + "-" + c} {...props} onClick={this.handleClick}><div className="candidates">{candidates}</div>{children}</div>
                 }
                 cells.push(celldiv)
             }
-            rows.push(<div class="row">{cells}</div>)
+            rows.push(<div key={"row" + r} className="row">{cells}</div>)
         }
         return (
             <div>
-                <div class="board" onKeyDown={this.handleKeyPress} tabIndex="0">
+                <div className="board" onKeyDown={this.handleKeyPress} tabIndex="0">
+                    <RuleCanvas rules={this.state.userRules} />
                     {rows}
                 </div>
                 <h2>Global Rules</h2>
@@ -254,6 +270,12 @@ export default class SudokuBoard extends React.Component {
                 <button onClick={this.addRule(Logic.ThermoRule)}>Add Thermometer</button>
                 <button onClick={this.addRule(Logic.AnyOrderConsecutiveRule)}>Add Any Order Consecutive Line</button>
                 <button onClick={this.addRule(Logic.AdjacentMinDifferenceRule)}>Add Adjacent Min Difference Line</button>
+                <h2>Display Settings</h2>
+                <label>
+                    <input type="checkbox" value="HideCandidates" onChange={this.handleSettingChange} />
+                    Hide Candidates
+                </label>
+
             </div>
         );
     }

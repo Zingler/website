@@ -24,6 +24,13 @@
 .board {
   float: left;
   margin-right: 15px;
+  position: relative;
+}
+
+.board canvas {
+  position:absolute;
+  top: 0px;
+  left: 0px;
 }
 
 .cell.bottom-border {
@@ -31,7 +38,7 @@
 }
 
 .invalid {
-  background-color: red !important;
+  background-color:rgb(255, 0,0, .5) !important;
 }
 
 .error-message {
@@ -89,7 +96,7 @@
 }
 
 .candidate-highlight {
-  background-color: rgb(205, 243, 255);
+  background-color: rgb(205, 243, 255, .5);
 }
 
 .value {
@@ -102,7 +109,7 @@
 }
 
 .selected {
-  background-color: lightblue;
+  background-color:rgba(0, 195, 255, 0.5);
 }
 
 .candidates {
