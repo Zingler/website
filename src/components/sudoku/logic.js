@@ -260,29 +260,29 @@ export class ThermoRule extends IDMixin(OrderedCellRule, "Thermo") {
 
         // Restrict candidates from the bulb to the tip
         var min = 1
-        for (let i=0; i<this.cell_indexes.length; i++) {
+        for (let i = 0; i < this.cell_indexes.length; i++) {
             let index = this.cell_indexes[i]
             let cell = board.grid[index[0]][index[1]]
             if (cell.value) {
                 min = cell.value
             } else {
-                for(let j=1; j<min; j++) {
+                for (let j = 1; j < min; j++) {
                     changed |= cell.remove(j)
                 }
-                min = Math.min(10,...cell.candidates)
+                min = Math.min(10, ...cell.candidates)
             }
             min += 1
         }
 
         // Restrict candidates from the tip to the bulb
         var max = 9
-        for (let i=this.cell_indexes.length-1; i>=0; i--) {
+        for (let i = this.cell_indexes.length - 1; i >= 0; i--) {
             let index = this.cell_indexes[i]
             let cell = board.grid[index[0]][index[1]]
             if (cell.value) {
                 max = cell.value
             } else {
-                for(let j=9; j>max; j--) {
+                for (let j = 9; j > max; j--) {
                     changed |= cell.remove(j)
                 }
                 max = Math.max(0, ...cell.candidates)
@@ -329,6 +329,28 @@ export class AnyOrderConsecutiveRule extends IDMixin(OrderedCellRule, "AnyOrderC
         }
         return [true]
     }
+
+    run(board) {
+        var changed = false
+        var min = 1
+        var max = 9
+        let values = this.cell_indexes.map(i => board.grid[i[0]][i[1]]).filter(c => c.value).map(c => c.value)
+        let valuesPlusMaxRange = values.map(i => i + this.max_range)
+        let valuesMinusMaxRange = values.map(i => i - this.max_range)
+        min = Math.max(min, ...valuesMinusMaxRange)
+        max = Math.min(max, ...valuesPlusMaxRange)
+
+        let open_cells = this.cell_indexes.map(i => board.grid[i[0]][i[1]]).filter(c => !c.value)
+        for (let cell of open_cells) {
+            for (let i = 1; i < min; i++) {
+                changed |= cell.remove(i)
+            }
+            for (let i = 9; i > max; i--) {
+                changed |= cell.remove(i)
+            }
+        }
+        return changed
+    }
 }
 
 export class AdjacentMinDifferenceRule extends IDMixin(OrderedCellRule, "AdjacentMinDifference") {
@@ -349,6 +371,36 @@ export class AdjacentMinDifferenceRule extends IDMixin(OrderedCellRule, "Adjacen
             }
         }
         return [true]
+    }
+
+    run(board) {
+        var changed = false
+
+        for (let i = 0; i < this.cell_indexes.length - 1; i++) {
+            let current = board.grid[this.cell_indexes[i][0]][this.cell_indexes[i][1]]
+            let next = board.grid[this.cell_indexes[i + 1][0]][this.cell_indexes[i + 1][1]]
+            changed |= this.restrictCandidates(current, next)
+        }
+
+        for (let i = 1; i < this.cell_indexes.length; i++) {
+            let current = board.grid[this.cell_indexes[i][0]][this.cell_indexes[i][1]]
+            let previous = board.grid[this.cell_indexes[i - 1][0]][this.cell_indexes[i - 1][1]]
+            changed |= this.restrictCandidates(current, previous)
+        }
+
+        return changed
+    }
+
+    restrictCandidates(cell, neighbor) {
+        let changed = false
+        if(!cell.value && neighbor.value) {
+            let min = neighbor.value - this.min_difference + 1
+            let max = neighbor.value + this.min_difference - 1
+            for(let i=min; i<=max; i++) {
+                changed |= cell.remove(i)
+            }
+        }
+        return changed
     }
 }
 

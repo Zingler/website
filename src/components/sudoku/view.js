@@ -125,12 +125,16 @@ export default class SudokuBoard extends React.Component {
         } else {
             this.globalRules = this.globalRules.filter(r => !(r instanceof cls))
         }
-        this.rule = new Logic.AggregateRule(this.globalRules)
+        let rules = this.globalRules.concat(this.state.userRules)
+        this.rule = new Logic.AggregateRule(rules)
         this.updateBoard(true)
     }
 
     addRule(RuleConstructor) {
         let adder = () => {
+            if(this.state.selection.length < 2) {
+                return
+            }
             let rule = new RuleConstructor(this.state.selection)
             this.userRules = this.userRules.concat([rule])
             let rules = this.globalRules.concat(this.userRules)
