@@ -313,7 +313,10 @@ function findDuplicate(values) {
 export class AnyOrderConsecutiveRule extends IDMixin(OrderedCellRule, "AnyOrderConsecutive") {
     constructor(cell_indexes) {
         super(cell_indexes)
-        this.max_range = cell_indexes.length - 1
+    }
+
+    get max_range() {
+        return this.cell_indexes.length - 1
     }
 
     valid(board) {
