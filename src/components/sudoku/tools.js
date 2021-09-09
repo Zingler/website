@@ -1,4 +1,4 @@
-import { ThermoRule } from "./logic"
+import { AdjacentMinDifferenceRule, AnyOrderConsecutiveRule, ThermoRule } from "./logic"
 import { Location, LocationSet } from "./board.js"
 import { box_width } from './rulerender.js'
 
@@ -78,11 +78,12 @@ export class GivenDigitTool extends Tool {
     }
 }
 
-export class ThermoTool extends Tool {
-    constructor(boardView) {
+export class DraggableConstraintTool extends Tool {
+    constructor(boardView, ruleConstructor) {
         super(boardView)
 
-        this.activeThermo = undefined
+        this.ruleConstructor = ruleConstructor
+        this.activeConstraint = undefined
 
         this.startHandler = this.startHandler.bind(this)
         this.moveHandler = this.moveHandler.bind(this)
@@ -104,7 +105,7 @@ export class ThermoTool extends Tool {
         let first = locationSet[0]
 
         let idsToRemove = this.boardView.state.userRules.filter(rule => {
-            let correctType = rule instanceof ThermoRule
+            let correctType = rule instanceof this.ruleConstructor
             let correctLocation = rule.cell_indexes.filter(([r, c]) => r == first.row && c == first.col).length > 0
             return correctType && correctLocation
         }).map(r => r.id)
@@ -120,18 +121,36 @@ export class ThermoTool extends Tool {
         if (this.deletedSomething) {
             return
         }
-        if (!this.activeThermo) {
-            this.activeThermo = new ThermoRule(locationSet)
-            this.boardView.state.userRules.push(this.activeThermo)
+        if (!this.activeConstraint) {
+            this.activeConstraint = new this.ruleConstructor(locationSet)
+            this.boardView.state.userRules.push(this.activeConstraint)
         } else {
-            this.activeThermo.cell_indexes = locationSet.map(l => [l.row, l.col])
+            this.activeConstraint.cell_indexes = locationSet.map(l => [l.row, l.col])
         }
         this.boardView.updateBoard(true)
     }
 
     endHandler() {
-        this.activeThermo = undefined
+        this.activeConstraint = undefined
         this.deletedSomething = false
+    }
+}
+
+export class ThermoTool extends DraggableConstraintTool {
+    constructor(boardView) {
+        super(boardView, ThermoRule)
+    }
+}
+
+export class AnyOrderConsecutiveTool extends DraggableConstraintTool {
+    constructor(boardView) {
+        super(boardView, AnyOrderConsecutiveRule)
+    }
+}
+
+export class AdjacentMinDifferenceTool extends DraggableConstraintTool {
+    constructor(boardView) {
+        super(boardView, AdjacentMinDifferenceRule)
     }
 }
 

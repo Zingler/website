@@ -127,3 +127,7 @@
 .row {
   display: flex;
 }
+
+label {
+  display: block;
+}

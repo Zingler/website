@@ -21,6 +21,7 @@ export default class SudokuBoard extends React.Component {
         this.addRule = this.addRule.bind(this)
         this.userRuleControls = this.userRuleControls.bind(this)
         this.removeRule = this.removeRule.bind(this)
+        this.tools = this.tools.bind(this)
 
         this.state = {
             selection: [],
@@ -33,7 +34,7 @@ export default class SudokuBoard extends React.Component {
                 "HideSolverDetermined": false
             },
         }
-        this.state["tool"] = new Tool.ThermoTool(this)
+        this.state["tool"] = new Tool.GivenDigitTool(this)
 
         this.rule.run(this.state.board)
     }
@@ -150,6 +151,29 @@ export default class SudokuBoard extends React.Component {
         return rules
     }
 
+    static toolList = [
+        [Tool.GivenDigitTool, "Given Digit"],
+        [Tool.ThermoTool, "Thermometer"],
+        [Tool.AnyOrderConsecutiveTool, "Any Order Consecutive"],
+        [Tool.AdjacentMinDifferenceTool, "Adjacent Min Difference"]
+    ]
+
+    tools() {
+        let tools = []
+        for(let [constructor, description] of SudokuBoard.toolList) {
+            tools.push(
+                <label key={constructor.name}>
+                    <input type="radio" name="tool" checked={this.state.tool instanceof constructor} onChange={() => this.setState(prev => ({
+                       tool: new constructor(this),
+                       selection: []
+                    }))}/>
+                    {description}
+                </label>
+            )
+        }
+        return tools
+    }
+
     render() {
         let [valid, bad_index, message] = this.rule.valid(this.state.board)
         let rows = []
@@ -241,12 +265,10 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="NonConsecutiveRule" onChange={this.handleGlobalRuleChange} />
                     Non Consecutive Adjacent cells
                 </label>
-                <br />
                 <label>
                     <input type="checkbox" value="KingRule" onChange={this.handleGlobalRuleChange} />
                     King Move restriction
                 </label>
-                <br />
                 <label>
                     <input type="checkbox" value="KnightRule" onChange={this.handleGlobalRuleChange} />
                     Knight Move restriction
@@ -256,29 +278,23 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="OnePlyAnalysis" onChange={this.handleSettingChange} />
                     Run One Ply Analysis
                 </label>
-                <br></br>
                 <label>
                     <input type="checkbox" value="Redundency" onChange={this.handleSettingChange} />
                     Analyse redundent digits
                 </label>
-                <br></br>
 
                 <button onClick={this.findSolution}>Find a solution</button>
-                <h2>Rules</h2>
-                <button onClick={this.addRule(Logic.ThermoRule)}>Add Thermometer</button>
-                <button onClick={this.addRule(Logic.AnyOrderConsecutiveRule)}>Add Any Order Consecutive Line</button>
-                <button onClick={this.addRule(Logic.AdjacentMinDifferenceRule)}>Add Adjacent Min Difference Line</button>
+                <h2>Tools</h2>
+                {this.tools()}
                 <h2>Display Settings</h2>
                 <label>
                     <input type="checkbox" value="HideCandidates" onChange={this.handleSettingChange} />
                     Hide Candidates
                 </label>
-                <br></br>
                 <label>
                     <input type="checkbox" value="HideSolverDetermined" onChange={this.handleSettingChange} />
                     Hide Solver Determined
                 </label>
-                <br></br>
                 <h2>User Added Rules</h2>
                 {this.userRuleControls()}
 
