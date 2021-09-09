@@ -72,7 +72,7 @@ class ThermoRenderer extends Renderer {
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.arc(...cell_center(cell_indexes[0]), box_width/2*.7, 0, 2*Math.PI)
+        ctx.arc(...cell_center(cell_indexes[0]), box_width / 2 * .7, 0, 2 * Math.PI)
         ctx.fill()
     }
 }
@@ -97,6 +97,7 @@ export class RuleCanvas extends React.Component {
 
     updateCanvas() {
         let ctx = this.canvasRef.current.getContext('2d')
+        ctx.clearRect(0, 0, 9 * box_width, 9 * box_width)
         for (let rule of this.props.rules) {
             for (let renderer of RENDERERS) {
                 if (renderer.applies(rule)) {

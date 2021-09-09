@@ -22,6 +22,8 @@ export default class SudokuBoard extends React.Component {
         this.handleSettingChange = this.handleSettingChange.bind(this)
         this.findSolution = this.findSolution.bind(this)
         this.addRule = this.addRule.bind(this)
+        this.userRuleControls = this.userRuleControls.bind(this)
+        this.removeRule = this.removeRule.bind(this)
 
         this.state = {
             selection: [],
@@ -145,6 +147,16 @@ export default class SudokuBoard extends React.Component {
         return adder
     }
 
+    removeRule(e) {
+        let target = e.currentTarget
+        let ruleId = target.getAttribute("data-rule-id")
+        this.userRules = this.state.userRules.filter(r => r.id !== ruleId)
+        let rules = this.globalRules.concat(this.userRules)
+        this.rule = new Logic.AggregateRule(rules)
+        this.setState(prev => ({userRules: this.userRules}))
+        this.updateBoard(true)
+    }
+
     handleSettingChange(e) {
         let target = e.currentTarget
         let value = target.value
@@ -175,6 +187,14 @@ export default class SudokuBoard extends React.Component {
             }
         }
         this.updateBoard()
+    }
+
+    userRuleControls() {
+        let rules = []
+        for(let rule of this.state.userRules) {
+            rules.push(<div key={rule.id}>{rule.id}<button data-rule-id={rule.id} onClick={this.removeRule}><i className="fa fa-times"/></button></div>)
+        }
+        return rules
     }
 
     render() {
@@ -304,6 +324,9 @@ export default class SudokuBoard extends React.Component {
                     <input type="checkbox" value="HideSolverDetermined" onChange={this.handleSettingChange} />
                     Hide Solver Determined
                 </label>
+                <br></br>
+                <h2>User Added Rules</h2>
+                {this.userRuleControls()}
 
             </div>
         );
