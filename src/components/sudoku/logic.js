@@ -1,4 +1,5 @@
 import { candidateCount, IDMixin } from './utils.js'
+import {Location} from './board.js'
 
 export class Rule {
     constructor() {
@@ -232,7 +233,11 @@ export class KingRule extends NonDuplicatesAtOffsets {
 class OrderedCellRule extends Rule {
     constructor(cell_indexes) {
         super()
-        this.cell_indexes = cell_indexes
+        if (cell_indexes[0] instanceof Location) {
+            this.cell_indexes = cell_indexes.map(l => [l.row, l.col])
+        } else {
+            this.cell_indexes = cell_indexes
+        }
     }
 }
 
@@ -393,10 +398,10 @@ export class AdjacentMinDifferenceRule extends IDMixin(OrderedCellRule, "Adjacen
 
     restrictCandidates(cell, neighbor) {
         let changed = false
-        if(!cell.value && neighbor.value) {
+        if (!cell.value && neighbor.value) {
             let min = neighbor.value - this.min_difference + 1
             let max = neighbor.value + this.min_difference - 1
-            for(let i=min; i<=max; i++) {
+            for (let i = min; i <= max; i++) {
                 changed |= cell.remove(i)
             }
         }

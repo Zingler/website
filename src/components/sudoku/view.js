@@ -1,7 +1,7 @@
 import React from "react"
 import { PureComponent } from "react"
 import "../../styles/sudoku.css"
-import { Board } from "./board.js"
+import { Board, Location, LocationSet } from "./board.js"
 import * as Logic from "./logic.js";
 import * as Analysis from "./analysis.js"
 import { search } from "./search";
@@ -12,11 +12,11 @@ export default class SudokuBoard extends React.Component {
         super(props);
 
         this.board = new Board()
+        this.boardRef = React.createRef()
         this.globalRules = [new Logic.CellMustHaveNumberRule(), new Logic.SudokuRule(), new Analysis.OnePlyAnalysisRule()]
         this.rule = new Logic.AggregateRule(this.globalRules)
         this.userRules = []
         this.rule.run(this.board)
-        this.handleClick = this.handleClick.bind(this)
         this.handleKeyPress = this.handleKeyPress.bind(this)
         this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
         this.handleSettingChange = this.handleSettingChange.bind(this)
@@ -24,6 +24,7 @@ export default class SudokuBoard extends React.Component {
         this.addRule = this.addRule.bind(this)
         this.userRuleControls = this.userRuleControls.bind(this)
         this.removeRule = this.removeRule.bind(this)
+        this.changeSelection = this.changeSelection.bind(this)
 
         this.state = {
             selection: [],
@@ -36,6 +37,15 @@ export default class SudokuBoard extends React.Component {
                 "HideSolverDetermined": false
             },
         }
+    }
+
+    componentDidMount() {
+        let changeSelection = new UniqueCellSelector()
+        changeSelection.endHandler = this.changeSelection
+        changeSelection.moveHandler = this.changeSelection
+        let cellSelector = new CellSelectionListener(this.boardRef.current)
+        cellSelector.handler = changeSelection
+        cellSelector.registerListeners()
     }
 
     singleSelection() {
@@ -51,8 +61,8 @@ export default class SudokuBoard extends React.Component {
         if (!selection) {
             return;
         }
-        let r = selection[0]
-        let c = selection[1]
+        let r = selection.row
+        let c = selection.col
 
         if (e.key > '0' && e.key <= '9') {
             let value = parseInt(e.key, 10)
@@ -78,7 +88,7 @@ export default class SudokuBoard extends React.Component {
         } else {
             this.board.clearAnalysis()
         }
-        if(this.state.settings.Redundency) {
+        if (this.state.settings.Redundency) {
             this.board.checkRedundency(this.rule)
         } else {
             this.board.clearRedundency()
@@ -88,26 +98,14 @@ export default class SudokuBoard extends React.Component {
         }))
     }
 
-    handleClick(e) {
-        let element = e.currentTarget
-        let row = parseInt(element.getAttribute('data-r'))
-        let col = parseInt(element.getAttribute('data-c'))
-        if (e.shiftKey) {
-            this.setState((state, props) => ({
-                selection: state.selection.concat([[row, col]])
+    changeSelection(selection) {
+        if (this.singleSelection() && selection.length == 1 && this.singleSelection().equals(selection[0])) {
+            this.setState(prev => ({
+                selection: []
             }))
         } else {
-            if (this.singleSelection()) {
-                let s = this.singleSelection()
-                if (s[0] == row && s[1] == col) { // Allow deselecting the current cell
-                    this.setState(prev => ({
-                        selection: []
-                    }))
-                    return;
-                }
-            }
             this.setState(prev => ({
-                selection: [[row, col]]
+                selection: selection
             }))
         }
     }
@@ -134,7 +132,7 @@ export default class SudokuBoard extends React.Component {
 
     addRule(RuleConstructor) {
         let adder = () => {
-            if(this.state.selection.length < 2) {
+            if (this.state.selection.length < 2) {
                 return
             }
             let rule = new RuleConstructor(this.state.selection)
@@ -153,7 +151,7 @@ export default class SudokuBoard extends React.Component {
         this.userRules = this.state.userRules.filter(r => r.id !== ruleId)
         let rules = this.globalRules.concat(this.userRules)
         this.rule = new Logic.AggregateRule(rules)
-        this.setState(prev => ({userRules: this.userRules}))
+        this.setState(prev => ({ userRules: this.userRules }))
         this.updateBoard(true)
     }
 
@@ -191,8 +189,8 @@ export default class SudokuBoard extends React.Component {
 
     userRuleControls() {
         let rules = []
-        for(let rule of this.state.userRules) {
-            rules.push(<div key={rule.id}>{rule.id}<button data-rule-id={rule.id} onClick={this.removeRule}><i className="fa fa-times"/></button></div>)
+        for (let rule of this.state.userRules) {
+            rules.push(<div key={rule.id}>{rule.id}<button data-rule-id={rule.id} onClick={this.removeRule}><i className="fa fa-times" /></button></div>)
         }
         return rules
     }
@@ -200,7 +198,7 @@ export default class SudokuBoard extends React.Component {
     render() {
         let [valid, bad_index, message] = this.rule.valid(this.board)
         let rows = []
-        let selectedCells = this.state.selection.map(([r, c]) => this.board.grid[r][c])
+        let selectedCells = this.state.selection.map(s => this.board.grid[s.row][s.col])
         if (this.singleSelection()) {
             var highlightCandidate = selectedCells[0].value
         }
@@ -242,12 +240,12 @@ export default class SudokuBoard extends React.Component {
                 if (!cell.value && cell.candidates.has(highlightCandidate)) {
                     props['className'] += " candidate-highlight"
                 }
-                if(this.state.settings.HideSolverDetermined && cell.solver_determined) {
+                if (this.state.settings.HideSolverDetermined && cell.solver_determined) {
                     props['className'] += " hidden"
                 }
 
                 if (cell.value) {
-                    celldiv = <div {...props} onClick={this.handleClick}><span className="value">{this.board.grid[r][c].value}</span>{children}</div>
+                    celldiv = <div {...props}><span className="value">{this.board.grid[r][c].value}</span>{children}</div>
                 } else {
                     var v = 1
                     let candidates = []
@@ -281,6 +279,7 @@ export default class SudokuBoard extends React.Component {
                 <div className="board" onKeyDown={this.handleKeyPress} tabIndex="0">
                     <RuleCanvas rules={this.state.userRules} />
                     {rows}
+                    <div id="interactLayer" ref={this.boardRef} style={{ position: "absolute", top: 0, width: "100%", height: "100%" }}></div>
                 </div>
                 <h2>Global Rules</h2>
                 <label>
@@ -330,5 +329,80 @@ export default class SudokuBoard extends React.Component {
 
             </div>
         );
+    }
+}
+
+
+class CellSelectionListener {
+    constructor(element) {
+        this.element = element
+        this.dragging = false
+        this.handler = undefined
+    }
+
+    interiorSelection(float) {
+        let int = Math.floor(float)
+        let decimal = float - int
+        return [int, (decimal > .2 && decimal < .8)]
+    }
+
+    toCellId(e, buffer = false) {
+        let [row, rInterior] = this.interiorSelection(e.offsetY / box_width)
+        let [col, cInterior] = this.interiorSelection(e.offsetX / box_width)
+        if (!buffer || (rInterior || cInterior)) {
+            return new Location(row, col)
+        }
+        return undefined
+    }
+
+    registerListeners() {
+        this.element.addEventListener('mousedown', e => {
+            let location = this.toCellId(e)
+            this.dragging = true
+            if (this.handler) {
+                this.handler.start(location)
+            }
+        })
+        this.element.addEventListener('mousemove', e => {
+            if (this.dragging) {
+                let location = this.toCellId(e, true)
+                if (location) {
+                    if (this.handler) {
+                        this.handler.move(location)
+                    }
+                }
+            }
+        })
+        this.element.addEventListener('mouseup', e => {
+            this.dragging = false
+            if (this.handler) {
+                this.handler.end()
+            }
+        })
+    }
+}
+
+
+class UniqueCellSelector {
+    constructor() {
+        this.moveHandler = undefined
+        this.endHandler = undefined
+    }
+
+    start(location) {
+        this.set = new LocationSet()
+        this.set.add(location)
+    }
+
+    move(location) {
+        if (this.set.add(location) && this.moveHandler) {
+            this.moveHandler(this.set.list)
+        }
+    }
+
+    end() {
+        if (this.endHandler) {
+            this.endHandler(this.set.list)
+        }
     }
 }

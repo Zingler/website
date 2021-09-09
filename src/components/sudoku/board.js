@@ -243,3 +243,34 @@ class Cell {
         return this.value || " ";
     }
 }
+
+export class Location {
+    constructor(r,c) {
+        this.row = r
+        this.col = c
+    }
+
+    equals(other) {
+        return this.row == other.row && this.col == other.col
+    }
+}
+
+export class LocationSet {
+    constructor() {
+        this.map = {}
+        this.list = []
+    }
+
+    num(location) {
+        return location.row * 9 + location.col
+    }
+
+    add(location) {
+        if(!(this.num(location) in this.map)) {
+            this.map[this.num(location)] = true
+            this.list.push(location)
+            return true
+        }
+        return false
+    }
+}
