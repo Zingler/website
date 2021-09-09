@@ -11,7 +11,7 @@ const TAPage = () => {
   return (
     <Layout>
       <Helmet>
-        <script type="text/javascript" src="/js/ta.js" />
+        <script type="text/javascript" src="./js/ta.js" />
       </Helmet>
 
       <Project title="Tetris Attack">
