@@ -138,7 +138,8 @@ export default class SudokuBoard extends React.Component {
         [Tool.GivenDigitTool, "Given Digit"],
         [Tool.ThermoTool, "Thermometer"],
         [Tool.AnyOrderConsecutiveTool, "Any Order Consecutive"],
-        [Tool.AdjacentMinDifferenceTool, "Adjacent Min Difference"]
+        [Tool.AdjacentMinDifferenceTool, "Adjacent Min Difference"],
+        [Tool.PalindromeTool, "Palindrome Line"],
     ]
 
     tools() {

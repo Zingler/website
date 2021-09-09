@@ -1,4 +1,4 @@
-import { AdjacentMinDifferenceRule, AnyOrderConsecutiveRule, ThermoRule } from "./logic"
+import { AdjacentMinDifferenceRule, AnyOrderConsecutiveRule, PalindromeRule, ThermoRule } from "./logic"
 import { Location, LocationSet } from "./board.js"
 import { box_width } from './rulerender.js'
 
@@ -151,6 +151,12 @@ export class AnyOrderConsecutiveTool extends DraggableConstraintTool {
 export class AdjacentMinDifferenceTool extends DraggableConstraintTool {
     constructor(boardView) {
         super(boardView, AdjacentMinDifferenceRule)
+    }
+}
+
+export class PalindromeTool extends DraggableConstraintTool {
+    constructor(boardView) {
+        super(boardView, PalindromeRule)
     }
 }
 

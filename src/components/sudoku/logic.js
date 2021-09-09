@@ -361,6 +361,61 @@ export class AnyOrderConsecutiveRule extends IDMixin(OrderedCellRule, "AnyOrderC
     }
 }
 
+export class PalindromeRule extends IDMixin(OrderedCellRule, "Palindrome") {
+    constructor(cell_indexes) {
+        super(cell_indexes)
+    }
+
+    pairIndex(index) {
+        return this.cell_indexes.length - index - 1
+    }
+
+    valid(board) {
+        for(let i=0; i<this.cell_indexes.length; i++) {
+            let index = this.cell_indexes[i]
+            let cell = board.grid[index[0]][index[1]]
+            let pairIndex = this.cell_indexes[this.pairIndex(i)]
+            let pairedCell = board.grid[pairIndex[0]][pairIndex[1]]
+            if(cell.value && pairedCell.value) {
+                if(cell.value !== pairedCell.value) {
+                    return [false, index, `Value must be ${pairedCell.value} to be a palindrome`]
+                }
+            }
+            if(!cell.value && pairedCell.value) {
+                if(!cell.candidates.has(pairedCell.value)) {
+                    return [false, index, `Value must be ${pairedCell.value} to be a palindrome, but this value was eliminated`]
+                }
+            }
+        }
+        return [true]
+    }
+
+    run(board) {
+        var changed = false
+        for(let i=0; i<this.cell_indexes.length; i++) {
+            let index = this.cell_indexes[i]
+            let cell = board.grid[index[0]][index[1]]
+            let pairIndex = this.cell_indexes[this.pairIndex(i)]
+            let pairedCell = board.grid[pairIndex[0]][pairIndex[1]]
+
+            if(cell.value && !pairedCell.value) {
+                pairedCell.pendingValue = cell.value
+                pairedCell.solver_determined = true
+                changed = true
+            }
+
+            if(!cell.value && !pairedCell.value) {
+                for(let i=1; i<=9; i++) {
+                    if(!cell.candidates.has(i)) {
+                        changed |= pairedCell.candidates.delete(i)
+                    }
+                }
+            }
+        }
+        return changed
+    }
+}
+
 export class AdjacentMinDifferenceRule extends IDMixin(OrderedCellRule, "AdjacentMinDifference") {
     constructor(cell_indexes, { min_difference = 3 } = {}) {
         super(cell_indexes)

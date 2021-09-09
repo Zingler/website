@@ -77,10 +77,34 @@ class ThermoRenderer extends Renderer {
     }
 }
 
+class PalindromeRenderer extends Renderer {
+    constructor() {
+        super(Logic.PalindromeRule)
+    }
+
+    render(ctx, rule) {
+        ctx.strokeStyle = "rgb(200,200,200)"
+        ctx.fillStyle = ctx.strokeStyle
+
+        ctx.lineWidth = 16
+        ctx.lineCap = "round"
+        ctx.lineJoin = "round"
+        let cell_indexes = rule.cell_indexes
+        ctx.beginPath()
+        ctx.moveTo(...cell_center(cell_indexes[0]))
+
+        for (let i = 1; i < cell_indexes.length; i++) {
+            ctx.lineTo(...cell_center(cell_indexes[i]))
+        }
+        ctx.stroke()
+    }
+}
+
 const RENDERERS = [
     new AnyOrderConsecutiveRenderer(),
     new AdjacentMinDifferenceRenderer(),
-    new ThermoRenderer()
+    new ThermoRenderer(),
+    new PalindromeRenderer(),
 ]
 
 export class RuleCanvas extends React.Component {
