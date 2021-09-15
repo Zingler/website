@@ -1,5 +1,5 @@
 import { candidateCount, IDMixin } from './utils.js'
-import {Location} from './board.js'
+import { Location } from './board.js'
 
 export class Rule {
     constructor() {
@@ -203,6 +203,41 @@ export class NonDuplicatesAtOffsets extends Rule {
     }
 }
 
+class OrderedCellRule extends Rule {
+    constructor(cell_indexes) {
+        super()
+        if (cell_indexes[0] instanceof Location) {
+            this.cell_indexes = cell_indexes.map(l => [l.row, l.col])
+        } else {
+            this.cell_indexes = cell_indexes
+        }
+    }
+}
+
+export class RegionSumRule extends IDMixin(OrderedCellRule, "Region Sum") {
+    constructor(cell_indexes, sum) {
+        super(cell_indexes)
+        this.sum = sum
+    }
+
+    valid(board) {
+        if (!this.sum) {
+            return [true]
+        }
+        let cells = this.cell_indexes.map(i => board.grid[i[0]][i[1]])
+        let openCellCount = cells.filter(c => !c.value).length
+        if (openCellCount == 0) {
+            let sum = cells.filter(c => c.value).map(c => c.value).reduce((x, y) => x + y)
+            if (this.sum != sum) {
+                return [false, this.cell_indexes[0], `Sum of this group should be ${this.sum} but was ${sum}`]
+            }
+        }
+    }
+
+    run(board) {
+    }
+}
+
 export class KnightRule extends NonDuplicatesAtOffsets {
     constructor() {
         let offsets = []
@@ -227,17 +262,6 @@ export class KingRule extends NonDuplicatesAtOffsets {
             }
         }
         super(offsets, "King")
-    }
-}
-
-class OrderedCellRule extends Rule {
-    constructor(cell_indexes) {
-        super()
-        if (cell_indexes[0] instanceof Location) {
-            this.cell_indexes = cell_indexes.map(l => [l.row, l.col])
-        } else {
-            this.cell_indexes = cell_indexes
-        }
     }
 }
 
@@ -371,18 +395,18 @@ export class PalindromeRule extends IDMixin(OrderedCellRule, "Palindrome") {
     }
 
     valid(board) {
-        for(let i=0; i<this.cell_indexes.length; i++) {
+        for (let i = 0; i < this.cell_indexes.length; i++) {
             let index = this.cell_indexes[i]
             let cell = board.grid[index[0]][index[1]]
             let pairIndex = this.cell_indexes[this.pairIndex(i)]
             let pairedCell = board.grid[pairIndex[0]][pairIndex[1]]
-            if(cell.value && pairedCell.value) {
-                if(cell.value !== pairedCell.value) {
+            if (cell.value && pairedCell.value) {
+                if (cell.value !== pairedCell.value) {
                     return [false, index, `Value must be ${pairedCell.value} to be a palindrome`]
                 }
             }
-            if(!cell.value && pairedCell.value) {
-                if(!cell.candidates.has(pairedCell.value)) {
+            if (!cell.value && pairedCell.value) {
+                if (!cell.candidates.has(pairedCell.value)) {
                     return [false, index, `Value must be ${pairedCell.value} to be a palindrome, but this value was eliminated`]
                 }
             }
@@ -392,21 +416,21 @@ export class PalindromeRule extends IDMixin(OrderedCellRule, "Palindrome") {
 
     run(board) {
         var changed = false
-        for(let i=0; i<this.cell_indexes.length; i++) {
+        for (let i = 0; i < this.cell_indexes.length; i++) {
             let index = this.cell_indexes[i]
             let cell = board.grid[index[0]][index[1]]
             let pairIndex = this.cell_indexes[this.pairIndex(i)]
             let pairedCell = board.grid[pairIndex[0]][pairIndex[1]]
 
-            if(cell.value && !pairedCell.value) {
+            if (cell.value && !pairedCell.value) {
                 pairedCell.pendingValue = cell.value
                 pairedCell.solver_determined = true
                 changed = true
             }
 
-            if(!cell.value && !pairedCell.value) {
-                for(let i=1; i<=9; i++) {
-                    if(!cell.candidates.has(i)) {
+            if (!cell.value && !pairedCell.value) {
+                for (let i = 1; i <= 9; i++) {
+                    if (!cell.candidates.has(i)) {
                         changed |= pairedCell.candidates.delete(i)
                     }
                 }

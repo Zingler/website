@@ -1,4 +1,4 @@
-import { AdjacentMinDifferenceRule, AnyOrderConsecutiveRule, PalindromeRule, ThermoRule } from "./logic"
+import { AdjacentMinDifferenceRule, AnyOrderConsecutiveRule, PalindromeRule, RegionSum, RegionSumRule, ThermoRule } from "./logic"
 import { Location, LocationSet } from "./board.js"
 import { box_width } from './rulerender.js'
 
@@ -102,6 +102,7 @@ export class DraggableConstraintTool extends Tool {
     }
 
     startHandler(locationSet) {
+        this.activeConstraint = undefined
         let first = locationSet[0]
 
         let idsToRemove = this.boardView.state.userRules.filter(rule => {
@@ -131,7 +132,6 @@ export class DraggableConstraintTool extends Tool {
     }
 
     endHandler() {
-        this.activeConstraint = undefined
         this.deletedSomething = false
     }
 }
@@ -157,6 +157,12 @@ export class AdjacentMinDifferenceTool extends DraggableConstraintTool {
 export class PalindromeTool extends DraggableConstraintTool {
     constructor(boardView) {
         super(boardView, PalindromeRule)
+    }
+}
+
+export class RegionSumTool extends DraggableConstraintTool {
+    constructor(boardView) {
+        super(boardView, RegionSumRule)
     }
 }
 

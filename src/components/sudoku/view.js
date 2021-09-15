@@ -140,6 +140,7 @@ export default class SudokuBoard extends React.Component {
         [Tool.AnyOrderConsecutiveTool, "Any Order Consecutive"],
         [Tool.AdjacentMinDifferenceTool, "Adjacent Min Difference"],
         [Tool.PalindromeTool, "Palindrome Line"],
+        [Tool.RegionSumTool, "Region Sum"],
     ]
 
     tools() {
