@@ -9,6 +9,7 @@ class Tool {
         this.onMouseDown = this.onMouseDown.bind(this)
         this.onMouseMove = this.onMouseMove.bind(this)
         this.onMouseUp = this.onMouseUp.bind(this)
+        this.handleKeyPress = this.handleKeyPress.bind(this)
     }
 
     handleKeyPress(e) { }
@@ -30,6 +31,29 @@ class Tool {
     }
 }
 
+class NumericInput {
+    constructor() {
+        this.clear()
+    }
+
+    clear() {
+        this.value = undefined
+    }
+
+    handleKeyPress(e) {
+        console.log(e.key)
+        if (e.key > '0' && e.key <= '9') {
+            let value = parseInt(e.key, 10)
+            this.value = (this.value || 0) * 10 + value
+        }
+        if (e.key === "Backspace" || e.key === "Delete") {
+            this.value = Math.floor(this.value / 10)
+            if (this.value == 0) {
+                this.value = undefined
+            }
+        }
+    }
+}
 
 export class GivenDigitTool extends Tool {
     constructor(boardView) {
@@ -163,6 +187,20 @@ export class PalindromeTool extends DraggableConstraintTool {
 export class RegionSumTool extends DraggableConstraintTool {
     constructor(boardView) {
         super(boardView, RegionSumRule)
+        this.input = new NumericInput()
+    }
+
+    onMouseDown(e) {
+        this.input.clear()
+        super.onMouseDown(e)
+    }
+
+    handleKeyPress(e) {
+        this.input.handleKeyPress(e)
+        if (this.activeConstraint) {
+            this.activeConstraint.sum = this.input.value
+        }
+        this.boardView.updateBoard(true)
     }
 }
 

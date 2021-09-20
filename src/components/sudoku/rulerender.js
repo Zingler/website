@@ -110,6 +110,19 @@ class RegionSumRenderer extends Renderer {
         return rule.cell_indexes.find(e => e[0] == target[0] && e[1] == target[1]) !== undefined
     }
 
+    topLeft(cell_indexes) {
+        let best = cell_indexes[0]
+        for(let index of cell_indexes) {
+            if(index[0] < best[0]) { // Prefer the top most row
+                best = index
+            }
+            if(index[0] == best[0] && index[1] < best[1]) { // Ties in the top most row go to the left most index
+                best = index
+            }
+        }
+        return best
+    }
+
     render(ctx, rule) {
         let rowSet = new IntervalSetCollection()
         let colSet = new IntervalSetCollection()
@@ -143,37 +156,37 @@ class RegionSumRenderer extends Renderer {
                 rowSet.add(botBound, leftBound, rightBound)
             }
 
-            if(left && (!topLeft || !top)) {
-                rowSet.add(topBound, leftBound-inset, leftBound)
+            if (left && (!topLeft || !top)) {
+                rowSet.add(topBound, leftBound - inset, leftBound)
             }
-            if(left && (!botLeft || !bot)) {
-                rowSet.add(botBound, leftBound-inset, leftBound)
+            if (left && (!botLeft || !bot)) {
+                rowSet.add(botBound, leftBound - inset, leftBound)
             }
-            if(right && (!topRight || !top)) {
-                rowSet.add(topBound, rightBound, rightBound+inset)
+            if (right && (!topRight || !top)) {
+                rowSet.add(topBound, rightBound, rightBound + inset)
             }
-            if(right && (!botRight || !bot)) {
-                rowSet.add(botBound, rightBound, rightBound+inset)
+            if (right && (!botRight || !bot)) {
+                rowSet.add(botBound, rightBound, rightBound + inset)
             }
 
-            if(top && (!topLeft || !left)) {
-                colSet.add(leftBound, topBound-inset, topBound)
+            if (top && (!topLeft || !left)) {
+                colSet.add(leftBound, topBound - inset, topBound)
             }
-            if(top && (!topRight || !right)) {
-                colSet.add(rightBound, topBound-inset, topBound)
+            if (top && (!topRight || !right)) {
+                colSet.add(rightBound, topBound - inset, topBound)
             }
-            if(bot && (!botLeft || !left)) {
-                colSet.add(leftBound, botBound, botBound+inset)
+            if (bot && (!botLeft || !left)) {
+                colSet.add(leftBound, botBound, botBound + inset)
             }
-            if(bot && (!botRight || !right)) {
-                colSet.add(rightBound, botBound, botBound+inset)
+            if (bot && (!botRight || !right)) {
+                colSet.add(rightBound, botBound, botBound + inset)
             }
         }
 
         ctx.strokeStyle = "rgb(0,0,0)"
         ctx.fillStyle = ctx.strokeStyle
         ctx.lineWidth = 2
-        ctx.setLineDash([10,5])
+        ctx.setLineDash([10, 5])
 
         for (let row in rowSet.dict) {
             let segments = rowSet.dict[row].get()
@@ -192,6 +205,13 @@ class RegionSumRenderer extends Renderer {
                 ctx.lineTo(col, end)
                 ctx.stroke()
             }
+        }
+
+        if (rule.sum) {
+            ctx.font = '14px sans-serif'
+            ctx.textBaseline = "top"
+            let index = this.topLeft(rule.cell_indexes)
+            ctx.fillText(rule.sum, index[1] * box_width+inset+3, index[0] * box_width+inset+3)
         }
     }
 }
@@ -277,6 +297,6 @@ class IntervalSetCollection {
         if (!(key in this.dict)) {
             this.dict[key] = new IntervalSet()
         }
-        this.dict[key].add(start-1, end+1)
+        this.dict[key].add(start - 1, end + 1)
     }
 }

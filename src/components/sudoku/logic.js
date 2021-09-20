@@ -232,6 +232,8 @@ export class RegionSumRule extends IDMixin(OrderedCellRule, "Region Sum") {
                 return [false, this.cell_indexes[0], `Sum of this group should be ${this.sum} but was ${sum}`]
             }
         }
+
+        return [true]
     }
 
     run(board) {
