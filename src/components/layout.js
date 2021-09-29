@@ -24,6 +24,9 @@ export default class Layout extends React.Component {
                                 <li>
                                     <a href="/project/wave">Wave Equation</a>
                                 </li>
+                                <li>
+                                    <a href="/project/sudoku">Sudoku Puzzle Setter</a>
+                                </li>
                             </ul>
                         </div>
                         </li>

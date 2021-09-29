@@ -42,7 +42,7 @@ class NumericInput {
 
     handleKeyPress(e) {
         console.log(e.key)
-        if (e.key > '0' && e.key <= '9') {
+        if (e.key >= '0' && e.key <= '9') {
             let value = parseInt(e.key, 10)
             this.value = (this.value || 0) * 10 + value
         }
