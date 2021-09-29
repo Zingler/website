@@ -248,16 +248,20 @@ class DragCellSelector {
         let [row, rInterior] = this.interiorSelection(e.nativeEvent.offsetY / box_width)
         let [col, cInterior] = this.interiorSelection(e.nativeEvent.offsetX / box_width)
         if (!buffer || (rInterior || cInterior)) {
-            return new Location(row, col)
+            if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+                return new Location(row, col)
+            }
         }
         return undefined
     }
 
     onMouseDown(e) {
         let location = this.toCellId(e)
-        this.dragging = true
-        if (this.handler) {
-            this.handler.start(location)
+        if (location) {
+            this.dragging = true
+            if (this.handler) {
+                this.handler.start(location)
+            }
         }
     }
     onMouseMove(e) {

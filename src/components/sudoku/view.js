@@ -7,6 +7,7 @@ import * as Analysis from "./analysis.js"
 import { search } from "./search";
 import { box_width, RuleCanvas } from "./rulerender.js"
 import * as Tool from './tools.js'
+import Modal from "./modal";
 
 export default class SudokuBoard extends React.Component {
     constructor(props) {
@@ -18,6 +19,7 @@ export default class SudokuBoard extends React.Component {
         this.handleGlobalRuleChange = this.handleGlobalRuleChange.bind(this)
         this.handleSettingChange = this.handleSettingChange.bind(this)
         this.findSolution = this.findSolution.bind(this)
+        this.clearModalMessage = this.clearModalMessage.bind(this)
         this.addRule = this.addRule.bind(this)
         this.tools = this.tools.bind(this)
 
@@ -26,6 +28,7 @@ export default class SudokuBoard extends React.Component {
             board: board,
             globalRules: globalRules,
             userRules: [],
+            modalMessage: undefined,
             settings: {
                 "OnePlyAnalysis": false,
                 "HideCandidates": false,
@@ -105,16 +108,15 @@ export default class SudokuBoard extends React.Component {
     handleSettingChange(e) {
         let target = e.currentTarget
         let value = target.value
+        if (value == "OnePlyAnalysis") {
+            this.state.board.clearAnalysis()
+        }
         this.setState((state, props) => ({
             settings: {
                 ...state.settings,
                 [value]: target.checked
             }
-        }))
-        if (value == "OnePlyAnalysis") {
-            this.state.board.clearAnalysis()
-        }
-        this.updateBoard(true)
+        }), () => this.updateBoard(true))
     }
 
     runAnalysis() {
@@ -130,8 +132,18 @@ export default class SudokuBoard extends React.Component {
             for (let [r, c, v] of actions) {
                 this.state.board.grid[r][c].value = v
             }
+        } else {
+            this.setState(prev => ({
+                modalMessage: "Unable to find a solution"
+            }))
         }
         this.updateBoard()
+    }
+
+    clearModalMessage() {
+        this.setState(prev => ({
+            modalMessage: undefined
+        }))
     }
 
     static toolList = [
@@ -145,13 +157,13 @@ export default class SudokuBoard extends React.Component {
 
     tools() {
         let tools = []
-        for(let [constructor, description] of SudokuBoard.toolList) {
+        for (let [constructor, description] of SudokuBoard.toolList) {
             tools.push(
                 <label key={constructor.name}>
                     <input type="radio" name="tool" checked={this.state.tool instanceof constructor} onChange={() => this.setState(prev => ({
-                       tool: new constructor(this),
-                       selection: []
-                    }))}/>
+                        tool: new constructor(this),
+                        selection: []
+                    }))} />
                     {description}
                 </label>
             )
@@ -244,6 +256,7 @@ export default class SudokuBoard extends React.Component {
                     <RuleCanvas rules={this.state.userRules} />
                     {rows}
                     <div id="interactLayer" onMouseDown={this.state.tool.onMouseDown} onMouseMove={this.state.tool.onMouseMove} onMouseUp={this.state.tool.onMouseUp} style={{ position: "absolute", top: 0, width: "100%", height: "100%" }}></div>
+                    <Modal show={this.state.modalMessage != undefined} message={this.state.modalMessage} onClose={this.clearModalMessage}></Modal>
                 </div>
                 <h2>Global Rules</h2>
                 <label>

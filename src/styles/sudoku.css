@@ -131,3 +131,32 @@
 label {
   display: block;
 }
+
+.modal {
+  position: absolute;
+  border: 1px solid black;
+  position: absolute;
+  background-color: white;
+  left: 40%;
+  top: 40%;
+  padding: 10px;
+  min-width: 210px;
+  min-height: 40px;
+  z-index: 1;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-left: 10px;
+  color: black;
+}
+
+.modal a {
+  padding-left: 5px;
+}
+
+.d-block {
+  display: block;
+}
+
+.d-none {
+  display: none;
+}
